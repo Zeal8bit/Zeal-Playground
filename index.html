@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Zeal 8-bit Playground</title>
+
+    <!-- CodeMirror (from CSDN CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/solarized.min.css">
+    <link rel="stylesheet" href="playground.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/z80/z80.min.js"></script>
+    <script src="asm.js"></script>
+</head>
+<body>
+
+    <div id="topbar">
+        Zeal 8-bit Computer Playground
+    </div>
+
+    <div id="container">
+
+        <!-- Explorer -->
+        <div id="explorer">
+            <strong>EXPLORER</strong>
+            <div class="file-item  active">📄 main.asm</div>
+        </div>
+
+        <!-- Editor -->
+        <div id="editor-container">
+            <div id="file-tab">main.asm</div>
+            <textarea id="editor">    ; Write your Z80 code here</textarea>
+
+            <div id="controls">
+                <button onclick="assemble()">Assemble</button>
+                <button onclick="code_run()">Run</button>
+            </div>
+            <div class="bottom-panel">
+                <div class="log" id="log">Ready to assemble...</div>
+                <div id="hex-view">Hex view will appear here.</div>
+            </div>
+        </div>
+
+        <!-- Output -->
+        <div id="output">
+            <div id="canvas-container">
+                <canvas id="canvas" tabindex="0" width="640" height="480"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="playground.js"></script>
+    <script src="zeal.elf.js"></script>
+</body>
+</html>
