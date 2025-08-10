@@ -39,8 +39,12 @@
     console.log('reloadEmulator', data);
 
     if (instance) {
-      instance.exit?.(0);
+      instance._zeal_exit();
       instance = null;
+      setTimeout(() => {
+        emulator.reload(data);
+      }, 100);
+      return;
     }
 
     const defaultModule = {
@@ -58,7 +62,6 @@
       },
       onRuntimeInitialized: function () {
         this.FS.writeFile('/roms/default.img', data);
-        this._main();
       },
     };
     // Module.noInitialRun = true;

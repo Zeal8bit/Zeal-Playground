@@ -27,29 +27,25 @@
           <icon class="btn fa-solid fa-left-right" open-target="explorer"></icon>
           <strong>EXPLORER</strong>
         </summary>
-        <div class="files">
-          <!-- <details open>
-            <summary class="file-item">
-              <icon class="fa-solid fa-folder"></icon>
-              user
-            </summary>
-            <div class="file-list">
-              <a class="file-item active"><icon class="fa-solid fa-file-code"></icon>main.asm</a>
-              <a class="file-item"><icon class="fa-solid fa-file-code"></icon>file1.asm</a>
-              <a class="file-item"><icon class="fa-solid fa-file-code"></icon>file2.asm</a>
-            </div>
-          </details> -->
+        <div class="container">
+          <div class="controls border-t border-b margin-b align-right">
+            <button class="new-file">New File</button>
+          </div>
+          <div class="files"></div>
         </div>
       </details>
 
       <div id="editor">
-        <div class="file-tab">main.asm</div>
+        <div class="file-tab">
+          <span class="filename">main.asm</span>
+          <icon class="fa-solid fa-save"></icon>
+        </div>
         <textarea name="content"></textarea>
 
-        <div id="controls">
-          <button onclick="assemble()">Assemble</button>
-          <button onclick="code_run()">Run</button>
-          <button onclick="code_stop()">Stop</button>
+        <div class="controls border-t align-right">
+          <button class="btn" onclick="assemble()"><icon class="fa-solid fa-code"></icon>Assemble</button>
+          <button class="btn" onclick="code_run()"><icon class="fa-solid fa-play"></icon>Run</button>
+          <button class="btn" onclick="code_stop()"><icon class="fa-solid fa-stop"></icon>Stop</button>
         </div>
         <div class="bottom-panel">
           <div class="log" id="log">Ready to assemble...</div>

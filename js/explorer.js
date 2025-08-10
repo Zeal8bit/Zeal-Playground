@@ -1,20 +1,28 @@
 (() => {
-  const USER_FILES = ['user/main.asm', 'user/file1.asm', 'user/file2.asm'];
   const BUILTIN_FILES = [
     'examples/hello.asm',
-    'examples/example2.asm',
-    'examples/example1.asm',
-    'examples/video/sprites/anim.asm',
-    'examples/video/sprite.asm',
-    'examples/example3.asm',
-    'examples/keyboard/input.asm',
-    'examples/video/sprites/wide/wide.asm',
-    'video/sprite.asm',
-    'keyboard/input.asm',
-    'video/sprites/wide/wide.asm',
+    // 'examples/example2.asm',
+    // 'examples/example1.asm',
+    // 'examples/video/sprites/anim.asm',
+    // 'examples/video/sprite.asm',
+    // 'examples/example3.asm',
+    // 'examples/keyboard/input.asm',
+    // 'examples/video/sprites/wide/wide.asm',
+    // 'video/sprite.asm',
+    // 'keyboard/input.asm',
+    // 'video/sprites/wide/wide.asm',
   ];
 
   const explorer = document.getElementById('explorer');
+  const bNewFile = document.querySelector('.new-file');
+  bNewFile.addEventListener('click', () => {
+    const e = new CustomEvent('new-file', {
+      detail: {},
+      bubbles: true,
+      cancelable: true,
+    });
+    explorer.dispatchEvent(e);
+  });
 
   function keySort(o) {
     return Object.keys(o).sort((a, b) => a.localeCompare(b));
@@ -64,31 +72,50 @@
     return tree;
   }
 
-  function openFile(name, path) {
-    console.log('open file', name, path);
-    fetch(`files/${path}`)
+  async function openRemoteFile(name, path) {
+    return fetch(`files/${path}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`ERROR: Failed to open ${name} from ${path} [${response.status}]`);
         }
         return response.text();
       })
-      .then((text) => {
-        const e = new CustomEvent('open-file', {
-          detail: {
-            name,
-            path,
-            text,
-          },
-          bubbles: true,
-          cancelable: true,
-        });
-        explorer.dispatchEvent(e);
-      })
       .catch((err) => {
         console.log('Failed to fetch file:', err);
       });
   }
+
+  async function openLocalFile(name, path) {
+    const item = localStorage.getItem(`file:${name}`);
+    if (!item) return; // oops
+    const o = JSON.parse(item);
+    return Promise.resolve(o.text);
+  }
+
+  function openFile(name, path) {
+    console.log('open file', name, path);
+
+    let file;
+    if (path.startsWith('user/')) {
+      // load from local storage
+      file = openLocalFile(name, path);
+    } else {
+      file = openRemoteFile(name, path);
+    }
+    file.then((text) => {
+      const e = new CustomEvent('open-file', {
+        detail: {
+          name,
+          path,
+          text,
+        },
+        bubbles: true,
+        cancelable: true,
+      });
+      explorer.dispatchEvent(e);
+    });
+  }
+  explorer.openFile = openFile;
 
   function addFile(name, path) {
     const a = document.createElement('a');
@@ -118,11 +145,8 @@
     // </details>
 
     const details = document.createElement('details');
-    // details.open = true;
+    details.open = true;
     details.id = `folder-${name}`;
-    const children = document.createElement('div');
-    children.classList.add('files');
-    details.appendChild(children);
 
     const summary = document.createElement('summary');
     summary.classList.add('file-item');
@@ -132,6 +156,10 @@
     summary.appendChild(document.createTextNode(name));
     details.appendChild(summary);
     details.addEventListener('toggle', toggleFolder);
+
+    const children = document.createElement('div');
+    children.classList.add('files');
+    details.appendChild(children);
 
     for (const folder of keySort(folders)) {
       children.appendChild(addFolder(folder, folders[folder]));
@@ -151,15 +179,42 @@
     return details;
   }
 
-  const userFiles = buildFileTree(USER_FILES);
-  const builtInFiles = buildFileTree(BUILTIN_FILES);
-  [userFiles, builtInFiles].forEach((tree) => {
+  function renderTree(tree, insertBefore = false) {
     console.log(tree);
     for (let folder of keySort(tree)) {
       console.log('root folder', folder);
-      const fileList = explorer.querySelector(':scope > .files');
+      const fileList = explorer.querySelector(':scope .container > .files');
       const details = addFolder(folder, tree[folder]);
-      fileList.appendChild(details);
+
+      if (insertBefore) {
+        fileList.insertBefore(details, fileList.firstChild);
+      } else {
+        fileList.appendChild(details);
+      }
     }
-  });
+  }
+
+  function refreshUser() {
+    console.log('refreshUser');
+    const USER_FILES = (() => {
+      const entries = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('file:')) {
+          const o = JSON.parse(localStorage.getItem(key));
+          entries.push(o.path);
+        }
+      }
+      return entries;
+    })();
+    const userFiles = buildFileTree(USER_FILES);
+    explorer.querySelector('#folder-user')?.remove();
+    renderTree(userFiles, true);
+  }
+
+  explorer.refreshUser = refreshUser;
+  refreshUser();
+
+  const builtInFiles = buildFileTree(BUILTIN_FILES);
+  [builtInFiles].forEach((tree) => renderTree(tree));
 })();

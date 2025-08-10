@@ -1,6 +1,8 @@
 (() => {
+  const DEFAULT_NEWFILE = `  ; Write your code here\n\n`;
   const editorEl = document.getElementById('editor');
-  const fileTab = editorEl.querySelector(':scope > .file-tab');
+  const fileName = editorEl.querySelector(':scope > .file-tab .filename');
+  const bSaveFile = editorEl.querySelector(':scope > .file-tab .fa-save');
   const textArea = editorEl.querySelector(':scope > [name=content]');
 
   editorEl.value = DEFAULT_CODE;
@@ -18,10 +20,60 @@
   });
 
   editorEl.editor = editor;
-  editorEl.open = (o) => {
+  editorEl.openFile = (o) => {
     console.log('open', o);
-    fileTab.textContent = o.name;
+    editor.fileName = o.name;
+    fileName.textContent = o.name ?? '* new file';
     editor.setValue(o.text);
+
+    const lineCount = editor.lineCount();
+    let lastEmptyLine = 0;
+    for (let i = 0; i < lineCount; i++) {
+      const line = editor.getLine(i).trim();
+      if (line.length && !line.startsWith(';')) {
+        editor.setCursor(i, 0);
+        editor.focus();
+        return;
+      }
+      if (!line.length) lastEmptyLine = i;
+    }
+
+    editor.setCursor(lastEmptyLine, 0);
+    editor.focus();
   };
+
   editorEl.getValue = () => editor.getValue();
+
+  bSaveFile.addEventListener('click', () => {
+    let name = editor.fileName?.trim();
+    if (!name || name.length < 0) {
+      name = prompt('Filename: ', 'user.asm');
+      if (name === null) {
+        console.warn('Invalid filename', name);
+        return;
+      }
+    }
+
+    console.log('saving file', name);
+
+    localStorage.setItem(
+      `file:${name}`,
+      JSON.stringify({
+        name: name,
+        path: `user/${name}`,
+        text: editor.getValue(),
+      }),
+    );
+
+    const e = new CustomEvent('file-saved', {
+      detail: {
+        name: name,
+        path: `user/${name}`,
+        text: editor.getValue(),
+      },
+      bubbles: true,
+      cancelable: true,
+    });
+    editorEl.dispatchEvent(e);
+  });
 })();

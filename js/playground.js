@@ -7,36 +7,23 @@ const explorer = document.getElementById('explorer');
 const emulator = document.getElementById('emulator');
 
 window.addEventListener('load', () => {
-  editor.open({
-    name: 'hello.asm',
-    path: 'examples/hello.asm',
-    text: `  ; Hello World Example
-start:
-  ld hl, message
-print_loop:
-  ld a, (hl)
-  or a
-  jr z, print_done
-  cp 0x0A   ; newline
-  jr nz, print_char
-  ld a, 0x01
-  out (0xA9), a
-  jr print_next
-print_char:
-  out (0xA0), a
-print_next:
-  inc hl
-  jr print_loop
-print_done:
-  jr $
-
-message: .cstr "hello\\nworld"`,
-  });
+  explorer.openFile('hello.asm', 'examples/hello.asm');
 });
 
 explorer.addEventListener('open-file', (e) => {
   console.log('open-file', e);
-  editor.open(e.detail);
+  editor.openFile(e.detail);
+});
+explorer.addEventListener('new-file', (e) => {
+  console.log('new-file', e);
+  editor.openFile({
+    name: undefined,
+    text: ` ; Write your code here\n\n`,
+  });
+});
+editor.addEventListener('file-saved', (e) => {
+  console.log('file-saved');
+  explorer.refreshUser();
 });
 
 function get_bytes(obj) {
