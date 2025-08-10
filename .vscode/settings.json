@@ -1,0 +1,19 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[css]": {
+    "editor.foldingStrategy": "indentation",
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4
+  },
+  "[html]": {
+    "editor.foldingStrategy": "indentation",
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2
+  },
+  "[javascript]": {
+    "editor.foldingStrategy": "indentation",
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2
+  }
+}
