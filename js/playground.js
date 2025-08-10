@@ -1,28 +1,43 @@
 const DEFAULT_CODE = `    ; Write your Z80 code here
-start:
-    ld a, 'H'
-    out (0xa0), a
-    out (0xa0), a
-    out (0xa0), a
-    out (0xa0), a
-    out (0xa0), a
-    out (0xa0), a
-    out (0xa0), a
-    out (0xa0), a
-    jr $`;
 
-const editorTextArea = document.getElementById('editor');
-editorTextArea.value = DEFAULT_CODE;
-const editor = CodeMirror.fromTextArea(
-  editorTextArea,
-  {
-    lineNumbers: true,
-    mode: 'z80',
-    styleActiveLine: true,
-    theme: 'solarized dark',
-  },
-  { value: DEFAULT_CODE },
-);
+`;
+
+const editor = document.getElementById('editor');
+const explorer = document.getElementById('explorer');
+const emulator = document.getElementById('emulator');
+
+window.addEventListener('load', () => {
+  editor.open({
+    name: 'hello.asm',
+    path: 'examples/hello.asm',
+    text: `  ; Hello World Example
+start:
+  ld hl, message
+print_loop:
+  ld a, (hl)
+  or a
+  jr z, print_done
+  cp 0x0A   ; newline
+  jr nz, print_char
+  ld a, 0x01
+  out (0xA9), a
+  jr print_next
+print_char:
+  out (0xA0), a
+print_next:
+  inc hl
+  jr print_loop
+print_done:
+  jr $
+
+message: .cstr "hello\\nworld"`,
+  });
+});
+
+explorer.addEventListener('open-file', (e) => {
+  console.log('open-file', e);
+  editor.open(e.detail);
+});
 
 function get_bytes(obj) {
   var bytes = [];
@@ -62,73 +77,10 @@ async function code_run() {
   console.log(bytes);
   /* If we have some bytes, load them to the VFS */
   const data = new Uint8Array(bytes);
-  FS.writeFile('/roms/default.img', data);
-  Module._main();
+
+  emulator.reload(data);
 }
 
-/* WebASM related */
-const canvas = document.getElementById('canvas');
-canvas.addEventListener('click', () => {
-  canvas.focus();
-  enableRaylibInput();
-});
-
-canvas.addEventListener('blur', () => {
-  disableRaylibKeyboard();
-});
-
-let savedKeyCallback = null;
-let savedCharCallback = null;
-
-function disableRaylibKeyboard() {
-  if (typeof GLFW === 'undefined' || !GLFW.active) return;
-  /* Get the GLFW window */
-  const id = GLFW.active.id;
-  savedKeyCallback = GLFW.active.keyFunc;
-  savedCharCallback = GLFW.active.charFunc;
-  GLFW.setKeyCallback(id, null); // disables keyboard input
-  GLFW.setCharCallback(id, null); // disables text input
+async function code_stop() {
+  emulator.stop();
 }
-
-function enableRaylibInput() {
-  if (typeof GLFW !== 'undefined' && GLFW.active) {
-    const id = GLFW.active.id;
-    GLFW.setKeyCallback(id, savedKeyCallback);
-    GLFW.setCharCallback(id, savedCharCallback);
-  }
-}
-
-var Module = {
-  print: function (text) {
-    console.log('Log: ' + text);
-  },
-  printErr: function (text) {
-    console.log('Error: ' + text);
-  },
-  canvas: (function () {
-    return canvas;
-  })(),
-  postRun: function () {
-    disableRaylibKeyboard();
-  },
-  noInitialRun: true,
-};
-// Module.noInitialRun = true;
-// Module.noExitRuntime = true;
-// Module.dontCaptureKeyboard = true;
-
-document.querySelectorAll('.file-item').forEach((item) => {
-  if (item.tagName === 'SUMMARY') {
-    const details = item.parentElement;
-    const icon = item.querySelector('.fa-solid'); // use a better identifier?
-    details.addEventListener('toggle', (e) => {
-      if (details.open) {
-        icon.classList.remove('fa-folder');
-        icon.classList.add('fa-folder-open');
-      } else {
-        icon.classList.remove('fa-folder-open');
-        icon.classList.add('fa-folder');
-      }
-    });
-  }
-});

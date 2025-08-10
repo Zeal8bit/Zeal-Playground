@@ -10,10 +10,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/solarized.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
     <link rel="stylesheet" href="css/playground.css" />
+    <link rel="stylesheet" href="css/explorer.css" />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/z80/z80.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/z80/z80.min.js"></script>
+
     <script src="js/asm.js"></script>
+    <script src="native/zeal.elf.js"></script>
   </head>
   <body>
     <div id="topbar"><img class="logo" src="imgs/zeal.png" /> Zeal 8-bit Computer Playground</div>
@@ -24,33 +27,29 @@
           <icon class="btn fa-solid fa-left-right" open-target="explorer"></icon>
           <strong>EXPLORER</strong>
         </summary>
-        <div class="file-list">
-          <a class="file-item active"><icon class="fa-solid fa-file-code"></icon> main.asm</a>
-          <a class="file-item"><icon class="fa-solid fa-file-code"></icon> file1.asm</a>
-          <a class="file-item"><icon class="fa-solid fa-file-code"></icon> file2.asm</a>
-
-          <details>
+        <div class="files">
+          <!-- <details open>
             <summary class="file-item">
               <icon class="fa-solid fa-folder"></icon>
-              examples
+              user
             </summary>
             <div class="file-list">
-              <a class="file-item"><icon class="fa-solid fa-file-code"></icon> example1.asm</a>
-              <a class="file-item"><icon class="fa-solid fa-file-code"></icon> example2.asm</a>
-              <a class="file-item"><icon class="fa-solid fa-file-code"></icon> example3.asm</a>
-              <a class="file-item"><icon class="fa-solid fa-file-code"></icon> example4.asm</a>
+              <a class="file-item active"><icon class="fa-solid fa-file-code"></icon>main.asm</a>
+              <a class="file-item"><icon class="fa-solid fa-file-code"></icon>file1.asm</a>
+              <a class="file-item"><icon class="fa-solid fa-file-code"></icon>file2.asm</a>
             </div>
-          </details>
+          </details> -->
         </div>
       </details>
 
-      <div id="editor-container">
-        <div id="file-tab">main.asm</div>
-        <textarea id="editor"></textarea>
+      <div id="editor">
+        <div class="file-tab">main.asm</div>
+        <textarea name="content"></textarea>
 
         <div id="controls">
           <button onclick="assemble()">Assemble</button>
           <button onclick="code_run()">Run</button>
+          <button onclick="code_stop()">Stop</button>
         </div>
         <div class="bottom-panel">
           <div class="log" id="log">Ready to assemble...</div>
@@ -58,7 +57,7 @@
         </div>
       </div>
 
-      <div id="output">
+      <div id="emulator">
         <div id="canvas-container">
           <canvas id="canvas" tabindex="0" width="640" height="480"></canvas>
         </div>
@@ -66,6 +65,8 @@
     </div>
 
     <script src="js/playground.js"></script>
-    <script src="native/zeal.elf.js"></script>
+    <script src="js/explorer.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/emulator.js"></script>
   </body>
 </html>

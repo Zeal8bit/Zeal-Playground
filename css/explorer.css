@@ -1,0 +1,114 @@
+#explorer {
+    --row-gap: 6px;
+    --col-gap: 8px;
+
+    width: 100%;
+    background-color: var(--c-100);
+    color: #93a1a1;
+    align-items: center;
+    padding: 10px;
+
+    &.file-list,
+    .file-list {
+        display: flex;
+        row-gap: var(--row-gap);
+        flex-direction: column;
+        /* padding: 10px 4px; */
+    }
+
+    .file-list,
+    details details {
+        padding-left: 16px;
+    }
+
+    [open].files {
+        display: flex;
+        flex-direction: column;
+        row-gap: var(--row-gap);
+    }
+
+    >summary {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        column-gap: var(--col-gap);
+
+        :not(icon) {
+            display: none;
+        }
+    }
+
+    &,
+    details {
+        display: flex;
+        flex-direction: column;
+        row-gap: var(--row-gap);
+
+        summary {
+            list-style: none;
+
+            &::-webkit-details-marker {
+                display: none;
+            }
+        }
+    }
+
+    >* {
+        width: 100%;
+    }
+
+    +* {
+        grid-column: span 2;
+    }
+
+    &:not(:first-child) {
+        display: none;
+    }
+
+    &[open] {
+        grid-column: span 2;
+        align-items: start;
+
+        >summary {
+            align-items: flex-start;
+            justify-content: flex-start;
+
+            :not(icon) {
+                display: inline-block;
+            }
+        }
+
+        &:not(:first-child) {
+            display: block;
+        }
+
+        +* {
+            grid-column: span 1;
+        }
+    }
+
+    strong {
+        font-size: 13px;
+        color: #657b83;
+    }
+
+    .file-item {
+        display: flex;
+        flex-direction: row;
+        gap: 1ch;
+        padding: 4px 8px 4px 4px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #eee;
+        cursor: pointer;
+
+        &:hover {
+            background-color: color-mix(in srgb, var(--c-border) 80%, black);
+        }
+
+        &.active {
+            background-color: var(--c-border);
+        }
+    }
+}
