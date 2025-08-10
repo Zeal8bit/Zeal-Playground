@@ -1,0 +1,43 @@
+#editor {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    grid-column: span 2;
+
+    .file-tab {
+        display: flex;
+        flex-direction: row;
+        height: 30px;
+        background-color: var(--c-0);
+        border-bottom: 1px solid var(--c-border);
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        font-size: 13px;
+        color: var(--c-800);
+
+        :first-child {
+            margin-right: auto;
+        }
+
+        icon {
+            cursor: pointer;
+
+            &:hover {
+                color: var(--c-900);
+            }
+        }
+    }
+
+    .content {
+        flex: 1;
+    }
+}
+
+
+
+.CodeMirror {
+    width: 100%;
+    height: 70vh;
+}

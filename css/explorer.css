@@ -4,12 +4,21 @@
 
     width: 100%;
     background-color: var(--c-100);
-    color: #93a1a1;
+    color: var(--c-800);
     align-items: center;
     padding: 10px;
 
     .container {
         min-width: 200px;
+    }
+
+    icon,
+    strong {
+        color: var(--c-600);
+    }
+
+    strong {
+        font-size: 13px;
     }
 
 
@@ -67,6 +76,14 @@
         :not(icon) {
             display: none;
         }
+
+        &:hover {
+
+            icon,
+            strong {
+                color: var(--c-900);
+            }
+        }
     }
 
     &,
@@ -96,11 +113,6 @@
         display: none;
     }
 
-    strong {
-        font-size: 13px;
-        color: #657b83;
-    }
-
     .file-item {
         display: flex;
         flex-direction: row;
@@ -108,7 +120,7 @@
         padding: 4px 8px 4px 4px;
         border-radius: 4px;
         font-size: 13px;
-        color: #eee;
+        color: var(--c-900);
         cursor: pointer;
 
         &:hover {
