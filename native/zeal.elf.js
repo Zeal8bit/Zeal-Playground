@@ -8914,6 +8914,8 @@ async function createWasm() {
 
 
 
+
+
   var FS_createPath = (...args) => FS.createPath(...args);
 
 
@@ -8983,6 +8985,8 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
 // Begin runtime exports
   Module['addRunDependency'] = addRunDependency;
   Module['removeRunDependency'] = removeRunDependency;
+  Module['setValue'] = setValue;
+  Module['getValue'] = getValue;
   Module['PATH'] = PATH;
   Module['FS_createPreloadedFile'] = FS_createPreloadedFile;
   Module['FS_unlink'] = FS_unlink;
@@ -9169,8 +9173,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'addOnPostRun',
   'freeTableIndexes',
   'functionsInTableMap',
-  'setValue',
-  'getValue',
   'PATH_FS',
   'UTF8Decoder',
   'UTF8ArrayToString',
@@ -9547,7 +9549,7 @@ function assignWasmExports(wasmExports) {
   _asyncify_start_rewind = createExportWrapper('asyncify_start_rewind', 1);
   _asyncify_stop_rewind = createExportWrapper('asyncify_stop_rewind', 0);
 }
-var wasmImports = {
+var _show_fps = Module['_show_fps'] = 270096;var wasmImports = {
   /** @export */
   GetCanvasIdJs,
   /** @export */

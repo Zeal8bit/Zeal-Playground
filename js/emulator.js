@@ -1,7 +1,27 @@
 (() => {
   /* WebASM related */
+  const emulator = document.getElementById('emulator');
+  const controls = emulator.querySelector('.controls');
   const canvas = document.getElementById('canvas');
   let instance = null;
+
+  const bToggleFPS = emulator.querySelector('.toggle-fps');
+  function setToggleFPS(show_fps) {
+    if (show_fps) {
+      bToggleFPS.textContent = 'Hide FPS';
+    } else {
+      bToggleFPS.textContent = 'Show FPS';
+    }
+  }
+  bToggleFPS?.addEventListener('click', () => {
+    console.log('toggle-fps');
+    if (instance) {
+      const show_fps = !!!instance.getValue(instance._show_fps, 'i8');
+      instance.setValue(instance._show_fps, show_fps ? 1 : 0, 'i8');
+      setToggleFPS(show_fps);
+      localStorage.setItem('show_fps', show_fps ? 1 : 0);
+    }
+  });
 
   canvas.addEventListener('click', () => {
     canvas.focus();
@@ -68,7 +88,15 @@
     // Module.noExitRuntime = true;
     // Module.dontCaptureKeyboard = true;
 
-    Module(defaultModule).then((mod) => (instance = mod));
+    Module(defaultModule).then((mod) => {
+      instance = mod;
+
+      const show_fps = parseInt(localStorage.getItem('show_fps'));
+      console.log('show_fps', show_fps);
+      instance.setValue(instance._show_fps, show_fps, 'i8');
+      setToggleFPS(show_fps);
+      controls.classList.remove('hidden');
+    });
   };
 
   emulator.stop = () => {
@@ -77,5 +105,6 @@
       instance._zeal_exit();
     }
     instance = null;
+    controls.classList.add('hidden');
   };
 })();

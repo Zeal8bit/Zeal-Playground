@@ -154,6 +154,10 @@ icon {
     margin-bottom: var(--row-gap);
 }
 
+.hidden {
+    display: none;
+}
+
 
 #emulator {
     width: 100%;
