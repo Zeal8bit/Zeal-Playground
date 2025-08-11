@@ -46,7 +46,6 @@
         <div class="controls border-t align-right">
           <button class="btn" onclick="assemble()"><icon class="fa-solid fa-code"></icon>Assemble</button>
           <button class="btn" onclick="code_run()"><icon class="fa-solid fa-play"></icon>Run</button>
-          <button class="btn" onclick="code_stop()"><icon class="fa-solid fa-stop"></icon>Stop</button>
         </div>
         <div class="bottom-panel">
           <div class="log" id="log">Ready to assemble...</div>
@@ -59,7 +58,8 @@
           <canvas id="canvas" tabindex="0" width="640" height="480"></canvas>
         </div>
         <div class="controls border-t margin-t hidden">
-          <button class="toggle-fps">Toggle FPS</button>
+          <button class="btn toggle-fps">Toggle FPS</button>
+          <button class="btn code-stop"><icon class="fa-solid fa-stop"></icon>Stop</button>
         </div>
       </div>
     </div>

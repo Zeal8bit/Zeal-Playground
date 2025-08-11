@@ -22,6 +22,10 @@
       localStorage.setItem('show_fps', show_fps ? 1 : 0);
     }
   });
+  const bCodeStop = emulator.querySelector('.code-stop');
+  bCodeStop.addEventListener('click', () => {
+    if (emulator.stop) emulator.stop();
+  });
 
   canvas.addEventListener('click', () => {
     canvas.focus();
