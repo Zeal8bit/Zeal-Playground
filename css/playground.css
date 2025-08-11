@@ -62,8 +62,17 @@ icon {
 #container {
     display: grid;
     height: var(--viewport-h);
-    grid-template-columns: 30px 180px auto 640px;
+    grid-template-columns: 30px 180px minmax(450px, 1fr) 5px minmax(320px, 1280px);
     gap: 10px;
+}
+
+.resize-column {
+    background-color: var(--c-0);
+    cursor: col-resize;
+
+    &:hover {
+        background-color: var(--c-600);
+    }
 }
 
 
@@ -88,7 +97,6 @@ icon {
 .log.error {
     border-left-color: #dc322f;
 }
-
 
 .controls {
     width: 100%;
@@ -159,19 +167,6 @@ icon {
 }
 
 
-#emulator {
-    width: 100%;
-    background-color: var(--c-100);
-    padding: 10px 10px 10px 0;
-    display: flex;
-    flex-direction: column;
-}
-
-#canvas {
-    background-color: black;
-    aspect-ratio: 1.33333333;
-    width: 100%;
-}
 
 button {
     background: #268bd2;

@@ -1,0 +1,13 @@
+#emulator {
+    width: 100%;
+    background-color: var(--c-100);
+    padding: 10px 10px 10px 0;
+    display: flex;
+    flex-direction: column;
+
+    canvas {
+        background-color: black;
+        aspect-ratio: 1.33333333;
+        width: 100%;
+    }
+}

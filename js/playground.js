@@ -2,12 +2,20 @@ const DEFAULT_CODE = `    ; Write your Z80 code here
 
 `;
 
+const GRID_TEMPLATE_COLUMNS = ['30px', '180px', 'minmax(450px, 1fr)', '8px', 'minmax(320px, 1280px)'];
+
+const container = document.getElementById('container');
 const editor = document.getElementById('editor');
 const explorer = document.getElementById('explorer');
 const emulator = document.getElementById('emulator');
+const containerResizer = document.querySelector('.resize-column');
 
 window.addEventListener('load', () => {
   explorer.openFile('hello.asm', 'examples/hello.asm');
+  const containerLayout = localStorage.getItem('container-layout');
+  if (containerLayout && containerLayout.trim().length) {
+    container.style.gridTemplateColumns = containerLayout;
+  }
 });
 
 explorer.addEventListener('open-file', (e) => {
@@ -71,3 +79,47 @@ async function code_run() {
 async function code_stop() {
   emulator.stop();
 }
+
+(() => {
+  let resizing = false;
+  let col1w_start, col2w_start;
+  let startX;
+  const minWidth = 320;
+  containerResizer.addEventListener('mousedown', (e) => {
+    resizing = true;
+    startX = e.clientX;
+
+    const styles = window.getComputedStyle(container);
+    const cols = styles.gridTemplateColumns.split(' ');
+    col1w_start = parseFloat(cols[2]);
+    col2w_start = parseFloat(cols[4]);
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    resizing = false;
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!resizing) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dx = e.clientX - startX;
+
+    let col1w_new = col1w_start + dx;
+    let col2w_new = col2w_start - dx;
+
+    if (col1w_new < minWidth) {
+      col2w_new -= minWidth - col1w_new;
+      col1w_new = minWidth;
+    }
+    if (col2w_new < minWidth) {
+      col1w_new -= minWidth - col2w_new;
+      col2w_new = minWidth;
+    }
+
+    GRID_TEMPLATE_COLUMNS[2] = `${col1w_new}px`;
+    GRID_TEMPLATE_COLUMNS[4] = `minmax(${col2w_new}px, 1fr)`;
+    container.style.gridTemplateColumns = GRID_TEMPLATE_COLUMNS.join(' ');
+    localStorage.setItem('container-layout', container.style.gridTemplateColumns);
+  });
+})();

@@ -2,7 +2,7 @@
   /* WebASM related */
   const emulator = document.getElementById('emulator');
   const controls = emulator.querySelector('.controls');
-  const canvas = document.getElementById('canvas');
+  const canvas = emulator.querySelector('canvas');
   let instance = null;
 
   const bToggleFPS = emulator.querySelector('.toggle-fps');
@@ -78,9 +78,10 @@
       printErr: function (text) {
         console.warn('Error: ' + text);
       },
-      canvas: (function () {
+      get canvas() {
+        const canvas = document.getElementById('canvas');
         return canvas;
-      })(),
+      },
       postRun: function () {
         disableRaylibKeyboard();
       },

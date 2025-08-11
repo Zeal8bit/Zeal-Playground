@@ -12,12 +12,12 @@
     <link rel="stylesheet" href="css/playground.css" />
     <link rel="stylesheet" href="css/explorer.css" />
     <link rel="stylesheet" href="css/editor.css" />
+    <link rel="stylesheet" href="css/emulator.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/z80/z80.min.js"></script>
 
     <script src="js/asm.js"></script>
-    <script src="native/zeal.elf.js"></script>
   </head>
   <body>
     <div id="topbar"><img class="logo" src="imgs/zeal.png" /> Zeal 8-bit Computer Playground</div>
@@ -52,6 +52,7 @@
           <div id="hex-view">Hex view will appear here.</div>
         </div>
       </div>
+      <div class="resize-column"></div>
 
       <div id="emulator">
         <div id="canvas-container">
@@ -68,5 +69,7 @@
     <script src="js/explorer.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/emulator.js"></script>
+
+    <script src="native/zeal.elf.js"></script>
   </body>
 </html>
