@@ -5,6 +5,13 @@
   const canvas = emulator.querySelector('canvas');
   let instance = null;
 
+  canvas.addEventListener("keydown", (e) => {
+    /* Prevent the window from listening on events that are meant to be sent to the VM */
+    if ([" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+      e.preventDefault();
+    }
+  });
+
   const bToggleFPS = emulator.querySelector('.toggle-fps');
   function setToggleFPS(show_fps) {
     if (show_fps) {
@@ -26,38 +33,6 @@
   bCodeStop.addEventListener('click', () => {
     if (emulator.stop) emulator.stop();
   });
-
-  canvas.addEventListener('click', () => {
-    canvas.focus();
-    enableRaylibInput();
-  });
-
-  canvas.addEventListener('blur', () => {
-    disableRaylibKeyboard();
-  });
-
-  let savedKeyCallback = null;
-  let savedCharCallback = null;
-
-  function disableRaylibKeyboard() {
-    if (typeof GLFW === 'undefined' || !GLFW.active) return;
-    console.log('disableRaylibKeyboard');
-
-    /* Get the GLFW window */
-    const id = GLFW.active.id;
-    savedKeyCallback = GLFW.active.keyFunc;
-    savedCharCallback = GLFW.active.charFunc;
-    GLFW.setKeyCallback(id, null); // disables keyboard input
-    GLFW.setCharCallback(id, null); // disables text input
-  }
-
-  function enableRaylibInput() {
-    if (typeof GLFW === 'undefined' || !GLFW.active) return;
-    console.log('enableRaylibInput');
-    const id = GLFW.active.id;
-    GLFW.setKeyCallback(id, savedKeyCallback);
-    GLFW.setCharCallback(id, savedCharCallback);
-  }
 
   emulator.reload = (data) => {
     console.log('reloadEmulator', data);
@@ -82,21 +57,15 @@
         const canvas = document.getElementById('canvas');
         return canvas;
       },
-      postRun: function () {
-        disableRaylibKeyboard();
-      },
       onRuntimeInitialized: function () {
         this.FS.writeFile('/roms/default.img', data);
       },
     };
-    // Module.noInitialRun = true;
-    // Module.noExitRuntime = true;
-    // Module.dontCaptureKeyboard = true;
 
     Module(defaultModule).then((mod) => {
       instance = mod;
 
-      const show_fps = parseInt(localStorage.getItem('show_fps'));
+      const show_fps = parseInt(localStorage.getItem('show_fps') || 0);
       console.log('show_fps', show_fps);
       instance.setValue(instance._show_fps, show_fps, 'i8');
       setToggleFPS(show_fps);
