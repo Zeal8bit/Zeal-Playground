@@ -304,7 +304,7 @@ var ASM = (() => {
           while (nstack.length > 0) {
             newexpression.push(nstack.shift());
           }
-    
+
           return new Expression(
             newexpression,
             object(this.ops1),
@@ -312,7 +312,7 @@ var ASM = (() => {
             object(this.functions)
           );
         },
-    
+
         substitute: function (variable, expr) {
           if (!(expr instanceof Expression)) {
             expr = new Parser().parse(String(expr));
@@ -339,7 +339,7 @@ var ASM = (() => {
               newexpression.push(item);
             }
           }
-    
+
           let ret = new Expression(
             newexpression,
             object(this.ops1),
@@ -541,7 +541,7 @@ var ASM = (() => {
               vars.push(item.index_);
             }
           }
-    
+
           return vars;
         },
         */
@@ -971,6 +971,10 @@ var ASM = (() => {
               strx = "0x" + str.substr(0, str.length - 1);
               base = 16;
             }
+          }
+          if (str[1] === "b" || str[1] === "B") {
+            strx = str.substr(2);
+            base = 2;
           }
           if (str[str.length - 1] === "b" || str[str.length - 1] === "B") {
             if (base == 10) {
@@ -2344,7 +2348,7 @@ var ASM = (() => {
       CSEG: 0,
       // Code segment
       DSEG: 0,
-      // Data segment  
+      // Data segment
       ESEG: 0,
       // Extra segment
       BSSEG: 0
@@ -2567,7 +2571,7 @@ var ASM = (() => {
     }
     out.sort((a, b) => a.addr - b.addr);
     return {
-      //notresolved, 
+      //notresolved,
       CSEG,
       DSEG,
       ESEG,
@@ -3260,8 +3264,8 @@ var ASM = (() => {
       PUSH: 4
     },
     /*
-    
-    
+
+
      */
     parseOpcode: function(s, vars, Parser2) {
       var R8 = function(reg3) {
