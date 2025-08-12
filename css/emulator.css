@@ -1,7 +1,8 @@
 #emulator {
+    --row-gap: 10px;
+    --col-gap: 10px;
     width: 100%;
     background-color: var(--c-100);
-    padding: 10px 10px 10px 0;
     display: flex;
     flex-direction: column;
 

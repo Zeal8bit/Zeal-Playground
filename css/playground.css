@@ -59,15 +59,26 @@ icon {
     width: fit-content !important;
 }
 
-#container {
+#viewport {
+    /* display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr; */
+
     display: grid;
+    grid-template-columns: 30px 180px var(--editor-width, minmax(450px, 1fr)) 5px minmax(320px, 1fr);
+    grid-template-rows: 1fr 1fr;
+    /* gap: 10px; */
+    --row-gap: 6px;
+    --col-gap: 8px;
+
     height: var(--viewport-h);
-    grid-template-columns: 30px 180px minmax(450px, 1fr) 5px minmax(320px, 1280px);
-    gap: 10px;
 }
+
+.container {}
 
 .resize-column {
     background-color: var(--c-0);
+    grid-row: span 2;
     cursor: col-resize;
 
     &:hover {
@@ -75,14 +86,43 @@ icon {
     }
 }
 
+#preferences {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    row-gap: var(--row-gap);
 
-.bottom-panel {
-    flex-grow: 1;
+    border-top: 2px solid var(--c-border);
+}
+
+.side-panel {
+    width: 100%;
+    padding: 10px;
+
+    .panel-heading {
+        width: 100%;
+        display: flex;
+        column-gap: var(--col-gap);
+
+        icon,
+        strong {
+            color: var(--c-600);
+        }
+
+        strong {
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+    }
+}
+
+#assembler {
     background: var(--c-0);
     padding: 0.5rem;
     font-family: monospace;
     overflow-x: auto;
-    max-height: 20vh;
     border-top: 2px solid var(--c-border);
 }
 
@@ -146,6 +186,10 @@ icon {
     border-right: 1px solid var(--c-border);
 }
 
+.margin {
+    margin: var(--row-gap) var(--col-gap);
+}
+
 .margin-l {
     margin-left: var(--col-gap);
 }
@@ -159,6 +203,26 @@ icon {
 }
 
 .margin-b {
+    margin-bottom: var(--row-gap);
+}
+
+.padding {
+    padding: var(--row-gap) var(--col-gap);
+}
+
+.padding-l {
+    padding-left: var(--col-gap);
+}
+
+.padding-r {
+    padding-right: var(--col-gap);
+}
+
+.padding-t {
+    padding-top: var(--row-gap);
+}
+
+.padding-b {
     margin-bottom: var(--row-gap);
 }
 

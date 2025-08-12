@@ -1,27 +1,27 @@
-const DEFAULT_CODE = `    ; Write your Z80 code here
+const DEFAULT_CODE = `    ; Write your Z80 code here\n\n`;
 
-`;
-
-const GRID_TEMPLATE_COLUMNS = ['30px', '180px', 'minmax(450px, 1fr)', '8px', 'minmax(320px, 1280px)'];
-
-const container = document.getElementById('container');
+const viewport = document.getElementById('viewport');
+// const container = document.getElementById('top-panel');
 const editor = document.getElementById('editor');
 const explorer = document.getElementById('explorer');
 const emulator = document.getElementById('emulator');
-const containerResizer = document.querySelector('.resize-column');
+const editorResizers = document.querySelectorAll('.resize-column');
+
+function prefs_reset_layout() {
+  console.log('prefs', 'reset layout');
+  localStorage.removeItem('container-layout');
+  viewport.style.removeProperty('--editor-width');
+}
 
 window.addEventListener('load', () => {
   explorer.openFile('hello.asm', 'examples/hello.asm');
-  const containerLayout = localStorage.getItem('container-layout');
-  if (containerLayout && containerLayout.trim().length) {
-    container.style.gridTemplateColumns = containerLayout;
-  }
 });
 
 explorer.addEventListener('open-file', (e) => {
   console.log('open-file', e);
   editor.openFile(e.detail);
 });
+
 explorer.addEventListener('new-file', (e) => {
   console.log('new-file', e);
   editor.openFile({
@@ -29,6 +29,7 @@ explorer.addEventListener('new-file', (e) => {
     text: ` ; Write your code here\n\n`,
   });
 });
+
 editor.addEventListener('file-saved', (e) => {
   console.log('file-saved');
   explorer.refreshUser();
@@ -83,17 +84,41 @@ async function code_stop() {
 (() => {
   let resizing = false;
   let col1w_start, col2w_start;
+  let window_width = window.innerWidth;
   let startX;
   const minWidth = 320;
-  containerResizer.addEventListener('mousedown', (e) => {
-    resizing = true;
-    startX = e.clientX;
 
-    const styles = window.getComputedStyle(container);
-    const cols = styles.gridTemplateColumns.split(' ');
-    col1w_start = parseFloat(cols[2]);
-    col2w_start = parseFloat(cols[4]);
+  function setColumns(col1, col2) {
+    viewport.style.setProperty('--editor-width', `${col1}px`);
+    localStorage.setItem('container-layout', col1);
+  }
+
+  window.addEventListener('resize', (e) => {
+    if (window.innerWidth < window_width) {
+      console.log('shrinking...');
+    }
+    window_width = window.innerWidth;
   });
+
+  window.addEventListener('load', (e) => {
+    const containerLayout = localStorage.getItem('container-layout');
+    if (containerLayout && containerLayout.trim().length) {
+      [col1w_start, col2w_start] = containerLayout.split(' ');
+      setColumns(col1w_start, col2w_start);
+    }
+  });
+
+  editorResizers.forEach((resizer) =>
+    resizer.addEventListener('mousedown', (e) => {
+      resizing = true;
+      startX = e.clientX;
+
+      const styles = window.getComputedStyle(viewport);
+      const cols = styles.gridTemplateColumns.split(' ');
+      col1w_start = parseFloat(cols[2]);
+      col2w_start = parseFloat(cols[4]);
+    }),
+  );
 
   document.addEventListener('mouseup', (e) => {
     resizing = false;
@@ -117,9 +142,6 @@ async function code_stop() {
       col2w_new = minWidth;
     }
 
-    GRID_TEMPLATE_COLUMNS[2] = `${col1w_new}px`;
-    GRID_TEMPLATE_COLUMNS[4] = `minmax(${col2w_new}px, 1fr)`;
-    container.style.gridTemplateColumns = GRID_TEMPLATE_COLUMNS.join(' ');
-    localStorage.setItem('container-layout', container.style.gridTemplateColumns);
+    setColumns(col1w_new, col2w_new);
   });
 })();

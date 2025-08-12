@@ -22,13 +22,13 @@
   <body>
     <div id="topbar"><img class="logo" src="imgs/zeal.png" /> Zeal 8-bit Computer Playground</div>
 
-    <div id="container">
-      <details id="explorer" open>
-        <summary>
+    <div id="viewport">
+      <details id="explorer" class="side-panel" open>
+        <summary class="panel-heading">
           <icon class="btn fa-solid fa-left-right" open-target="explorer"></icon>
           <strong>EXPLORER</strong>
         </summary>
-        <div class="container">
+        <div class="contents">
           <div class="controls border-t border-b margin-b align-right">
             <button class="new-file">New File</button>
           </div>
@@ -47,14 +47,10 @@
           <button class="btn" onclick="assemble()"><icon class="fa-solid fa-code"></icon>Assemble</button>
           <button class="btn" onclick="code_run()"><icon class="fa-solid fa-play"></icon>Run</button>
         </div>
-        <div class="bottom-panel">
-          <div class="log" id="log">Ready to assemble...</div>
-          <div id="hex-view">Hex view will appear here.</div>
-        </div>
       </div>
       <div class="resize-column"></div>
 
-      <div id="emulator">
+      <div id="emulator" class="padding">
         <div id="canvas-container">
           <canvas id="canvas" tabindex="0" width="640" height="480"></canvas>
         </div>
@@ -63,6 +59,21 @@
           <button class="btn code-stop"><icon class="fa-solid fa-stop"></icon>Stop</button>
         </div>
       </div>
+
+      <div id="preferences" class="side-panel">
+        <div class="panel-heading">
+          <icon class="btn fa-solid fa-asterisk" open-target="explorer"></icon>
+          <strong>Preferences</strong>
+        </div>
+        <div class="controls">
+          <button class="prefs-reset" onclick="prefs_reset_layout()">Reset Layout</button>
+        </div>
+      </div>
+      <div id="assembler">
+        <div class="log" id="log">Ready to assemble...</div>
+        <div id="hex-view">Hex view will appear here.</div>
+      </div>
+      <div></div>
     </div>
 
     <script src="js/playground.js"></script>

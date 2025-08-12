@@ -172,7 +172,7 @@
     console.log(tree);
     for (let folder of keySort(tree)) {
       console.log('root folder', folder);
-      const fileList = explorer.querySelector(':scope .container > .files');
+      const fileList = explorer.querySelector(':scope .contents > .files');
       const details = addFolder(folder, tree[folder]);
 
       if (insertBefore) {
