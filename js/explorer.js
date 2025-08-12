@@ -1,17 +1,6 @@
 (() => {
-  const BUILTIN_FILES = [
-    'examples/hello.asm',
-    // 'examples/example2.asm',
-    // 'examples/example1.asm',
-    // 'examples/video/sprites/anim.asm',
-    // 'examples/video/sprite.asm',
-    // 'examples/example3.asm',
-    // 'examples/keyboard/input.asm',
-    // 'examples/video/sprites/wide/wide.asm',
-    // 'video/sprite.asm',
-    // 'keyboard/input.asm',
-    // 'video/sprites/wide/wide.asm',
-  ];
+  /* Do not modify this line, it is auto-generated */
+  const BUILTIN_FILES = [];
 
   const explorer = document.getElementById('explorer');
   const bNewFile = document.querySelector('.new-file');
