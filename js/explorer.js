@@ -1,7 +1,4 @@
 (() => {
-  /* Do not modify this line, it is auto-generated */
-  const BUILTIN_FILES = [];
-
   const explorer = document.getElementById('explorer');
   const bNewFile = document.querySelector('.new-file');
   bNewFile.addEventListener('click', () => {
@@ -170,9 +167,9 @@
 
   function renderTree(tree, insertBefore = false) {
     console.log(tree);
+    const fileList = explorer.querySelector(':scope .contents > .files');
     for (let folder of keySort(tree)) {
       console.log('root folder', folder);
-      const fileList = explorer.querySelector(':scope .contents > .files');
       const details = addFolder(folder, tree[folder]);
 
       if (insertBefore) {
@@ -204,6 +201,21 @@
   explorer.refreshUser = refreshUser;
   refreshUser();
 
-  const builtInFiles = buildFileTree(BUILTIN_FILES);
-  [builtInFiles].forEach((tree) => renderTree(tree));
+  fetch('files/manifest.json')
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('ERROR: Failed to open files/manifest.json');
+      }
+      return response.json();
+    })
+    .then((manifest) => {
+      console.log('manifest', manifest);
+      if (manifest?.files?.length) {
+        const tree = buildFileTree(manifest.files);
+        if (tree) renderTree(tree);
+      }
+    })
+    .catch((err) => {
+      console.warn('Failed to fetch file:', err);
+    });
 })();
