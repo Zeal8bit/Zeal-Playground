@@ -79,16 +79,26 @@
     return Promise.resolve(o.text);
   }
 
-  function openFile(path) {
+  async function readFile(path) {
     let file;
     let name = path.split('/').slice(-1)[0] || undefined;
+    let text = '';
     if (path.startsWith('user/')) {
       // load from local storage
-      file = openLocalFile(path);
+      text = await openLocalFile(path);
     } else {
-      file = openRemoteFile(path);
+      text = await openRemoteFile(path);
     }
-    return file.then((text) => {
+    return Promise.resolve({
+      path,
+      name,
+      text,
+    });
+  }
+  explorer.readFile = readFile;
+
+  function openFile(path) {
+    return readFile(path).then(({ name, path, text }) => {
       const e = new CustomEvent('open-file', {
         detail: {
           name,
