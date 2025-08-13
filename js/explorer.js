@@ -58,7 +58,7 @@
     return tree;
   }
 
-  async function openRemoteFile(name, path) {
+  async function openRemoteFile(path) {
     return fetch(`files/${path}`)
       .then((response) => {
         if (!response.ok) {
@@ -71,24 +71,24 @@
       });
   }
 
-  async function openLocalFile(name, path) {
+  async function openLocalFile(path) {
+    let name = path.split('/').slice(1).join('/');
     const item = localStorage.getItem(`file:${name}`);
     if (!item) return; // oops
     const o = JSON.parse(item);
     return Promise.resolve(o.text);
   }
 
-  function openFile(name, path) {
-    console.log('open file', name, path);
-
+  function openFile(path) {
     let file;
+    let name = path.split('/').slice(-1)[0] || undefined;
     if (path.startsWith('user/')) {
       // load from local storage
-      file = openLocalFile(name, path);
+      file = openLocalFile(path);
     } else {
-      file = openRemoteFile(name, path);
+      file = openRemoteFile(path);
     }
-    file.then((text) => {
+    return file.then((text) => {
       const e = new CustomEvent('open-file', {
         detail: {
           name,
@@ -99,6 +99,7 @@
         cancelable: true,
       });
       explorer.dispatchEvent(e);
+      return e.detail;
     });
   }
   explorer.openFile = openFile;
@@ -110,7 +111,7 @@
     i.classList.add('fa-solid', 'fa-file-code');
     a.appendChild(document.createTextNode(name));
 
-    a.addEventListener('click', (e) => openFile(name, path));
+    a.addEventListener('click', (e) => openFile(path));
     return a;
   }
 
@@ -166,10 +167,8 @@
   }
 
   function renderTree(tree, insertBefore = false) {
-    console.log(tree);
     const fileList = explorer.querySelector(':scope .contents > .files');
     for (let folder of keySort(tree)) {
-      console.log('root folder', folder);
       const details = addFolder(folder, tree[folder]);
 
       if (insertBefore) {
@@ -181,7 +180,6 @@
   }
 
   function refreshUser() {
-    console.log('refreshUser');
     const USER_FILES = (() => {
       const entries = [];
       for (let i = 0; i < localStorage.length; i++) {

@@ -14,17 +14,33 @@ function prefs_reset_layout() {
   viewport.style.removeProperty('--editor-width');
 }
 
+function handleUrlHash() {
+  const hash = location.hash?.replace('#', '').trim();
+  if (!hash) return;
+  const [c, v] = [hash.substring(0, 1), hash.substring(1)];
+  switch (c.toLowerCase()) {
+    case 'n':
+      editor.gotoLine(parseInt(v) - 1, true);
+      break;
+    case 'l':
+      editor.gotoLabel(v);
+      break;
+  }
+}
+
 window.addEventListener('load', () => {
-  explorer.openFile('hello.asm', 'examples/hello.asm');
+  const url = new URL(document.location.href);
+  const file = url.searchParams.get('f') || 'examples/hello.asm';
+  explorer.openFile(file).then((o) => handleUrlHash());
 });
 
+window.addEventListener('hashchange', handleUrlHash);
+
 explorer.addEventListener('open-file', (e) => {
-  console.log('open-file', e);
   editor.openFile(e.detail);
 });
 
 explorer.addEventListener('new-file', (e) => {
-  console.log('new-file', e);
   editor.openFile({
     name: undefined,
     text: DEFAULT_CODE,
@@ -32,7 +48,6 @@ explorer.addEventListener('new-file', (e) => {
 });
 
 editor.addEventListener('file-saved', (e) => {
-  console.log('file-saved');
   explorer.refreshUser();
 });
 
@@ -46,8 +61,16 @@ function get_bytes(obj) {
   return bytes;
 }
 
+const ERRORS = [];
 async function assemble() {
   const code = editor.getValue();
+
+  // clear previous errors, if any
+  ERRORS.forEach((error) => {
+    editor.showError(error.s.numline - 1, false);
+  });
+  ERRORS.length = 0;
+
   try {
     const result = await ASM.compile(code, { readFile: () => 0 }, { assembler: 'z80' });
     console.log('Assembly Result:', result);
@@ -60,7 +83,10 @@ async function assemble() {
     const error = e.error;
     document.getElementById('log').className = 'log error';
     if (error.s) {
+      console.warn(error);
       document.getElementById('log').textContent = `❌ Error on line ${error.s.numline}: ${error.msg}`;
+      editor.gotoLine(error.s.numline - 1, { error: true });
+      ERRORS.push(error);
     } else {
       document.getElementById('log').textContent = '❌ Error: ' + error.msg;
     }
@@ -82,6 +108,9 @@ async function code_stop() {
   emulator.stop();
 }
 
+/**
+ * Resize Handler
+ */
 (() => {
   let resizing = false;
   let col1w_start, col2w_start;
