@@ -209,21 +209,23 @@
   explorer.refreshUser = refreshUser;
   refreshUser();
 
-  fetch('files/manifest.json')
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('ERROR: Failed to open files/manifest.json');
-      }
-      return response.json();
-    })
-    .then((manifest) => {
-      console.log('manifest', manifest);
-      if (manifest?.files?.length) {
-        const tree = buildFileTree(manifest.files);
-        if (tree) renderTree(tree);
-      }
-    })
-    .catch((err) => {
-      console.warn('Failed to fetch file:', err);
-    });
+  explorer.fetchManifest = () => {
+    return fetch('files/manifest.json')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('ERROR: Failed to open files/manifest.json');
+        }
+        return response.json();
+      })
+      .then((manifest) => {
+        console.log('manifest', manifest);
+        if (manifest?.files?.length) {
+          const tree = buildFileTree(manifest.files);
+          if (tree) renderTree(tree);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch file:', err);
+      });
+  };
 })();

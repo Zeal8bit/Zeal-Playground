@@ -11,6 +11,7 @@
     .file-tab {
         display: flex;
         flex-direction: row;
+        column-gap: var(--col-gap);
         height: 30px;
         background-color: var(--c-0);
         border-bottom: 1px solid var(--c-border);

@@ -28,10 +28,13 @@ function handleUrlHash() {
   }
 }
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   const url = new URL(document.location.href);
   const file = url.searchParams.get('f') || 'examples/hello.asm';
-  explorer.openFile(file).then((o) => handleUrlHash());
+  await explorer.openFile(file).then((o) => handleUrlHash());
+  await explorer.fetchManifest();
+
+  document.body.classList.remove('loading');
 });
 
 window.addEventListener('hashchange', handleUrlHash);

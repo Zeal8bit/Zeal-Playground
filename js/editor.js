@@ -2,6 +2,7 @@
   const editorEl = document.getElementById('editor');
   const fileName = editorEl.querySelector(':scope > .file-tab .filename');
   const bSaveFile = editorEl.querySelector(':scope > .file-tab .fa-save');
+  const bCopyFile = editorEl.querySelector(':scope > .file-tab .fa-copy');
   const textArea = editorEl.querySelector(':scope > [name=content]');
 
   editorEl.value = DEFAULT_CODE;
@@ -182,5 +183,21 @@
       cancelable: true,
     });
     editorEl.dispatchEvent(e);
+  });
+  bCopyFile.addEventListener('click', (e) => {
+    const text = editor.getValue();
+    console.log('copy-file');
+    if (navigator.clipboard?.writeText) {
+      console.log('writeText', text);
+      navigator.clipboard.writeText(text);
+
+      e.target.classList.add('fa-check');
+      e.target.classList.remove('fa-copy');
+      setTimeout(() => {
+        console.log('remove check');
+        e.target.classList.remove('fa-check');
+        e.target.classList.add('fa-copy');
+      }, 300);
+    }
   });
 })();

@@ -26,6 +26,12 @@ body {
     font-family: "Segoe UI", sans-serif;
     background-color: var(--c-100);
     color: var(--c-900);
+
+    &.loading {
+        >* {
+            visibility: hidden;
+        }
+    }
 }
 
 #topbar {
