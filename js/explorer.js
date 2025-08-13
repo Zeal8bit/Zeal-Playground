@@ -103,6 +103,18 @@
   }
   explorer.openFile = openFile;
 
+  async function readFile(name, path) {
+    console.log('read file', name, path);
+
+    if (path.startsWith('user/')) {
+      // load from local storage
+      return await openLocalFile(name, path);
+    } else {
+      return await openRemoteFile(name, path);
+    }
+  }
+  explorer.readFile = readFile;
+
   function addFile(name, path) {
     const a = document.createElement('a');
     a.classList.add('file-item');
