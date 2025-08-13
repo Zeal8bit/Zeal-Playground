@@ -1,5 +1,4 @@
 (() => {
-  const DEFAULT_NEWFILE = `  ; Write your code here\n\n`;
   const editorEl = document.getElementById('editor');
   const fileName = editorEl.querySelector(':scope > .file-tab .filename');
   const bSaveFile = editorEl.querySelector(':scope > .file-tab .fa-save');

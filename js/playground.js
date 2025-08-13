@@ -1,4 +1,5 @@
-const DEFAULT_CODE = `    ; Write your Z80 code here\n\n`;
+const DEFAULT_CODE = `    .include "headers/zvb.asm"\n\n` +
+`    ; Write your code here\n`;
 
 const viewport = document.getElementById('viewport');
 // const container = document.getElementById('top-panel');
@@ -26,7 +27,7 @@ explorer.addEventListener('new-file', (e) => {
   console.log('new-file', e);
   editor.openFile({
     name: undefined,
-    text: ` ; Write your code here\n\n`,
+    text: DEFAULT_CODE,
   });
 });
 
