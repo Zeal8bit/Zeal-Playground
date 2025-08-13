@@ -1,6 +1,7 @@
 (() => {
   const explorer = document.getElementById('explorer');
   const bNewFile = document.querySelector('.new-file');
+  const fileList = explorer.querySelector(':scope .contents > .files');
   bNewFile.addEventListener('click', () => {
     const e = new CustomEvent('new-file', {
       detail: {},
@@ -177,7 +178,6 @@
   }
 
   function renderTree(tree, insertBefore = false) {
-    const fileList = explorer.querySelector(':scope .contents > .files');
     for (let folder of keySort(tree)) {
       const details = addFolder(folder, tree[folder]);
 
@@ -228,4 +228,15 @@
         console.warn('Failed to fetch file:', err);
       });
   };
+
+  /**
+   * Resize Handler
+   */
+
+  const onResize = (e) => {
+    const height = explorer.clientHeight - fileList.offsetTop;
+    fileList.style.setProperty('--max-h', `${height}px`);
+  };
+  window.addEventListener('resize', onResize);
+  onResize();
 })();

@@ -120,9 +120,9 @@ async function code_stop() {
  * Resize Handler
  */
 (() => {
+  let window_width = window.innerWidth;
   let resizing = false;
   let col1w_start, col2w_start;
-  let window_width = window.innerWidth;
   let startX;
   const minWidth = 320;
 

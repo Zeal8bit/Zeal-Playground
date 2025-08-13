@@ -2,24 +2,27 @@
   /* WebASM related */
   const emulator = document.getElementById('emulator');
   const controls = emulator.querySelector('.controls');
+  const output = emulator.querySelector('.output');
   const canvas = emulator.querySelector('canvas');
   let instance = null;
 
-  canvas.addEventListener("keydown", (e) => {
+  canvas.addEventListener('keydown', (e) => {
     /* Prevent the window from listening on events that are meant to be sent to the VM */
-    if ([" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+    if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault();
     }
   });
 
   const bToggleFPS = emulator.querySelector('.toggle-fps');
   function setToggleFPS(show_fps) {
+    log('warn')('show_fps', show_fps);
     if (show_fps) {
       bToggleFPS.textContent = 'Hide FPS';
     } else {
       bToggleFPS.textContent = 'Show FPS';
     }
   }
+
   bToggleFPS?.addEventListener('click', () => {
     console.log('toggle-fps');
     if (instance) {
@@ -29,10 +32,22 @@
       localStorage.setItem('show_fps', show_fps ? 1 : 0);
     }
   });
+
   const bCodeStop = emulator.querySelector('.code-stop');
   bCodeStop.addEventListener('click', () => {
     if (emulator.stop) emulator.stop();
   });
+
+  function log(prefix = '') {
+    return (text, ...args) => {
+      console.log(prefix, text, ...args);
+      const line = document.createElement('div');
+      line.classList.add('log-line', prefix);
+      line.textContent = text + (args ? ' ' + args.join(' ') : '');
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    };
+  }
 
   emulator.reload = (data) => {
     console.log('reloadEmulator', data);
@@ -46,13 +61,10 @@
       return;
     }
 
+    output.innerHTML = '';
     const defaultModule = {
-      print: function (text) {
-        console.log('Log: ' + text);
-      },
-      printErr: function (text) {
-        console.warn('Error: ' + text);
-      },
+      print: log('info'),
+      printErr: log('error'),
       get canvas() {
         const canvas = document.getElementById('canvas');
         return canvas;
@@ -65,11 +77,12 @@
     Module(defaultModule).then((mod) => {
       instance = mod;
 
-      const show_fps = parseInt(localStorage.getItem('show_fps') || 0);
-      console.log('show_fps', show_fps);
+      const show_fps = !!parseInt(localStorage.getItem('show_fps') || 0);
       instance.setValue(instance._show_fps, show_fps, 'i8');
       setToggleFPS(show_fps);
       controls.classList.remove('hidden');
+      output.classList.remove('hidden');
+      output.scrollTop = output.scrollHeight;
     });
   };
 
@@ -80,5 +93,6 @@
     }
     instance = null;
     controls.classList.add('hidden');
+    output.classList.add('hidden');
   };
 })();

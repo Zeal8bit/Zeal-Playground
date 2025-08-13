@@ -1,6 +1,7 @@
 #emulator {
     --row-gap: 10px;
     --col-gap: 10px;
+    height: 100%;
     width: 100%;
     background-color: var(--c-100);
     display: flex;
@@ -10,5 +11,22 @@
         background-color: black;
         aspect-ratio: 1.33333333;
         width: 100%;
+    }
+
+    .output {
+        min-height: 0;
+        overflow: scroll;
+        display: flex;
+        flex-direction: column;
+        row-gap: 0.25rem;
+        font-family: monospace;
+
+        .error {
+            color: var(--error);
+        }
+
+        .warn {
+            color: var(--warn);
+        }
     }
 }

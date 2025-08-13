@@ -12,6 +12,9 @@
     --c-600: #657b83;
     --c-800: #93a1a1;
     --c-900: #eee;
+
+    --error: #dc322f;
+    --warn: #839496;
 }
 
 * {
@@ -72,7 +75,7 @@ icon {
 
     display: grid;
     grid-template-columns: 30px 180px var(--editor-width, minmax(450px, 1fr)) 5px minmax(320px, 1fr);
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: calc(var(--viewport-h) - 250px) 250px;
     /* gap: 10px; */
     --row-gap: 6px;
     --col-gap: 8px;

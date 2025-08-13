@@ -45,8 +45,6 @@
     width: 100%;
     height: 70vh;
 
-    --error: #dc322f;
-
     .cm-error-marker {
         text-align: center;
         color: var(--error);

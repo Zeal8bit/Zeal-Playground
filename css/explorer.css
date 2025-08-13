@@ -2,6 +2,7 @@
     background-color: var(--c-100);
     color: var(--c-800);
     align-items: center;
+    position: relative;
 
     >.contents {
         min-width: 200px;
@@ -49,6 +50,8 @@
         flex-direction: column;
         row-gap: var(--row-gap);
         width: 100%;
+        max-height: var(--max-h);
+        overflow: scroll;
     }
 
     >summary {
