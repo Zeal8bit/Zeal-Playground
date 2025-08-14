@@ -33,10 +33,6 @@
     .content {
         flex: 1;
     }
-
-    .error-line {
-        background-color: #c3000082;
-    }
 }
 
 
