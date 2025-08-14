@@ -58,22 +58,6 @@
     return;
   });
 
-  // Overlay mode to color labels in Z80 assembly
-  CodeMirror.defineMode('z80-playground', function (config) {
-    var baseZ80 = CodeMirror.getMode(config, 'z80'); // base Z80 mode
-
-    return CodeMirror.overlayMode(baseZ80, {
-      token: function (stream) {
-        // Match labels at the start of a line: e.g. LOOP:
-        if (stream.sol() && stream.match(/^[A-Za-z_.$][\w.$]*:/)) {
-          return 'special'; // custom token type
-        }
-        stream.next();
-        return null;
-      },
-    });
-  });
-
   const editor = CodeMirror.fromTextArea(textArea, {
     mode: 'z80-playground',
     theme: 'solarized dark',
