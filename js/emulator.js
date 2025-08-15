@@ -13,6 +13,12 @@
     }
   });
 
+  canvas.addEventListener('wheel', (e) => {
+    console.log('wheel', e);
+    emulator.scrollLeft += e.deltaX;
+    emulator.scrollTop += e.deltaY;
+  });
+
   const bToggleFPS = emulator.querySelector('.toggle-fps');
   function setToggleFPS(show_fps) {
     log('warn')('show_fps', show_fps);
