@@ -5,6 +5,7 @@
     width: 100%;
     background-color: var(--c-100);
     display: flex;
+
     flex-direction: column;
 
     canvas {

@@ -38,11 +38,6 @@
     }
   });
 
-  const bCodeStop = emulator.querySelector('.code-stop');
-  bCodeStop.addEventListener('click', () => {
-    if (emulator.stop) emulator.stop();
-  });
-
   function log(prefix = '') {
     return (text, ...args) => {
       console.log(prefix, text, ...args);

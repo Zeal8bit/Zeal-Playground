@@ -60,10 +60,12 @@ async function code_run() {
   const data = new Uint8Array(bytes);
 
   emulator.reload(data);
+  editor.classList.remove('expand');
 }
 
 async function code_stop() {
   emulator.stop();
+  editor.classList.add('expand');
 }
 
 /**

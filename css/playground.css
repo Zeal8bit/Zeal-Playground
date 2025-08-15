@@ -81,9 +81,21 @@ icon {
     --col-gap: 8px;
 
     height: var(--viewport-h);
-}
 
-.container {}
+    &:has(>#editor.expand)>.resize-column {
+        grid-row: 2;
+        grid-column: 4;
+        border-top: 2px solid var(--c-border)
+    }
+
+    &:has(>#editor.expand)>#emulator {
+        display: none;
+    }
+
+    #editor.expand {
+        grid-column: span 3;
+    }
+}
 
 .resize-column {
     background-color: var(--c-0);
