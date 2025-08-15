@@ -64,15 +64,11 @@ function get_bytes(obj) {
   return bytes;
 }
 
-const ERRORS = [];
 async function assemble() {
   const code = editor.getValue();
 
   // clear previous errors, if any
-  ERRORS.forEach((error) => {
-    editor.showError(error.s.numline - 1, false);
-  });
-  ERRORS.length = 0;
+  editor.clearErrors();
 
   async function readFile(path) {
     const { text } = await explorer.readFile(path);
@@ -92,9 +88,12 @@ async function assemble() {
     document.getElementById('log').className = 'log error';
     if (error.s) {
       console.warn(error);
-      document.getElementById('log').textContent = `❌ Error on line ${error.s.numline}: ${error.msg}`;
-      editor.gotoLine(error.s.numline - 1, { error: true });
-      ERRORS.push(error);
+      /* If the error comes from an included file, `error.s.includedFile` is defined  */
+      let file = error.s.includedFile || editor.editor.fileName;
+      document.getElementById('log').textContent = `❌ Error ${file}:${error.s.numline}: ${error.msg}`;
+      /* If the error is in an included file, show the include as the error */
+      let line = error.s.includedFileAtLine || error.s.numline
+      editor.gotoLine(line - 1, { error: true });
     } else {
       document.getElementById('log').textContent = '❌ Error: ' + error.msg;
     }

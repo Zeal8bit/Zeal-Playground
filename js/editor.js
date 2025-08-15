@@ -102,6 +102,14 @@
     }
   };
 
+  editorEl.clearErrors = () => {
+    const lineCount = editor.lineCount();
+    for (let line = 0; line < lineCount; line++) {
+      editor.removeLineClass(line, 'background', 'cm-error');
+      editor.setGutterMarker(line, 'CodeMirror-linenumbers', null);
+    }
+  };
+
   editorEl.gotoLabel = (label, highlight = false) => {
     const lineCount = editor.lineCount();
     const pattern = new RegExp('^\\s*' + label.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ':');
