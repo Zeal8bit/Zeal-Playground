@@ -1,0 +1,20 @@
+{
+  "name": "zeal-playground",
+  "version": "0.0.0",
+  "description": "Zeal Playground",
+  "main": "index.html",
+  "scripts": {
+    "build": "bash build.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeal8bit/Zeal-Playground.git"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/zeal8bit/Zeal-Playground/issues"
+  },
+  "homepage": "https://github.com/zeal8bit/Zeal-Playground#readme"
+}
