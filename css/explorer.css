@@ -51,7 +51,6 @@
         row-gap: var(--row-gap);
         width: 100%;
         max-height: var(--max-h);
-        overflow: auto;
     }
 
     >summary {

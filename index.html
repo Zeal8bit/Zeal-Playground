@@ -87,7 +87,7 @@
           <div class="controls border-t border-b margin-b align-right">
             <button class="new-file">New File</button>
           </div>
-          <div class="files"></div>
+          <div class="files scrollbars"></div>
         </div>
       </details>
 
@@ -114,7 +114,7 @@
           <button class="btn toggle-fps">Toggle FPS</button>
           <button class="btn code-stop"><icon class="fa-solid fa-stop"></icon>Stop</button>
         </div>
-        <div class="output margin-t hidden"></div>
+        <div class="output scrollbars margin-t hidden"></div>
       </div>
 
       <div id="preferences" class="side-panel">
@@ -126,11 +126,11 @@
           <button class="prefs-reset" onclick="prefs_reset_layout()">Reset Layout</button>
         </div>
       </div>
-      <div id="assembler">
+      <div id="assembler" class="scrollbars">
         <div class="log" id="log">Ready to assemble...</div>
         <pre id="hex-view">Hex view will appear here.</pre>
       </div>
-      <div id="listing">
+      <div id="listing" class="scrollbars">
         <pre id="list-view">Listing will appear here.</pre>
       </div>
     </div>
