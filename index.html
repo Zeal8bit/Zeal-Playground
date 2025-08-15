@@ -72,7 +72,7 @@
     <link rel="stylesheet" href="css/editor.css" />
     <link rel="stylesheet" href="css/emulator.css" />
 
-    <script src="js/asm.js"></script>
+    <script src="js/asm80-playground.js"></script>
   </head>
   <body class="loading">
     <div id="topbar"><img class="logo" src="imgs/zeal.png" /> Zeal 8-bit Computer Playground</div>
@@ -128,15 +128,18 @@
       </div>
       <div id="assembler">
         <div class="log" id="log">Ready to assemble...</div>
-        <div id="hex-view">Hex view will appear here.</div>
+        <pre id="hex-view">Hex view will appear here.</pre>
       </div>
-      <div></div>
+      <div id="listing">
+        <pre id="list-view">Listing will appear here.</pre>
+      </div>
     </div>
 
     <script src="js/playground.js"></script>
     <script src="js/explorer.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/emulator.js"></script>
+    <script src="js/assembler.js"></script>
 
     <script src="native/zeal.elf.js"></script>
   </body>

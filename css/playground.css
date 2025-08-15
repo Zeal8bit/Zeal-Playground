@@ -127,13 +127,16 @@ icon {
     }
 }
 
-#assembler {
+#assembler,
+#listing {
     background: var(--c-0);
     padding: 0.5rem;
     font-family: monospace;
     overflow-x: auto;
     border-top: 2px solid var(--c-border);
 }
+
+
 
 .log {
     background: var(--c-0);

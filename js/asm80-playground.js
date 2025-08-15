@@ -1,5 +1,34 @@
-(() => {
-  // utils/utils.js
+var ASM = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod2) => __copyProps(__defProp({}, "__esModule", { value: true }), mod2);
+
+  // asm80-playground.js
+  var asm80_playground_exports = {};
+  __export(asm80_playground_exports, {
+    compile: () => compile2,
+    compileFromFile: () => compileFromFile2,
+    cpus: () => cpus2,
+    html: () => html2,
+    link: () => link2,
+    lst: () => lst2
+  });
+
+  // ../asm80/utils/utils.js
   var norm = (xs) => xs.map((lx) => {
     let l = lx.line;
     l = l.replace("&lt;", "<");
@@ -24,12 +53,6 @@
     }
     return l.length ? true : false;
   });
-  var noncomments = (xs) => {
-    return xs.map((obj) => ({
-      ...obj,
-      line: obj.line.split(";")[0]
-    }));
-  };
   var toInternal = (xs) => {
     let numLine = 1;
     return xs.map((line) => ({
@@ -53,7 +76,7 @@
   var toHex2 = (n) => toHexN(n & 255, 2);
   var toHex4 = (n) => toHexN(n, 4);
 
-  // listing.js
+  // ../asm80/listing.js
   var lst = (result, raw, compact = false) => {
     let V = result.dump;
     let vars = result.vars;
@@ -202,7 +225,7 @@
     return out;
   };
 
-  // expression-parser.js
+  // ../asm80/expression-parser.js
   function object(o) {
     function F() {
     }
@@ -1282,7 +1305,7 @@
     }
   };
 
-  // pass1.js
+  // ../asm80/pass1.js
   var notInModule = (opts) => {
     if (opts.PRAGMAS && opts.PRAGMAS.indexOf("MODULE") > -1) {
       throw { msg: "Not allowed in modules" };
@@ -1759,7 +1782,7 @@
     return [V, vars];
   };
 
-  // utils/fp.js
+  // ../asm80/utils/fp.js
   var fptozx = (num, simpleint) => {
     simpleint = simpleint === void 0 ? true : simpleint;
     let sgn = num < 0;
@@ -1801,7 +1824,7 @@
     return [e + 128, n[0], n[1], n[2], n[3]];
   };
 
-  // pass2.js
+  // ../asm80/pass2.js
   var pass2 = (vx, opts) => {
     const charVar8 = (dta2) => {
       if (opts.PRAGMAS.RELAX) {
@@ -2285,7 +2308,7 @@
     return [V, vars];
   };
 
-  // objcode.js
+  // ../asm80/objcode.js
   var get16 = (s, endian = false) => {
     let a = s.lens[s.wia];
     let b = s.lens[s.wia + 1];
@@ -2555,7 +2578,7 @@
     };
   };
 
-  // utils/base64escaped.js
+  // ../asm80/utils/base64escaped.js
   var btoax = (str) => {
     const encoder = new TextEncoder();
     const bytes = encoder.encode(str);
@@ -2571,7 +2594,7 @@
     return decoder.decode(bytes);
   };
 
-  // parseLine.js
+  // ../asm80/parseLine.js
   var includedLineNumber = (s) => {
     if (!s.includedFile) return s.numline;
     return s.includedFileAtLine + "__" + s.numline;
@@ -2825,7 +2848,7 @@
     };
   };
 
-  // preprocessor.js
+  // ../asm80/preprocessor.js
   var macroParams = (d, params = [], uniq, pars, qnumline) => {
     const out = {
       line: d.line,
@@ -2948,7 +2971,7 @@
           fullni = ni;
           ni = findBlock(ni, block, opts);
         }
-        const preni = await prepro(ni, opts, fullni);
+        const preni = await prepro(ni, {}, fullni);
         for (const preniItem of preni[0]) {
           preniItem.includedFile = params[0].replace(/\"/g, "");
           preniItem.includedFileAtLine = item.numline;
@@ -3117,10 +3140,9 @@
     return out;
   };
 
-  // parser.js
+  // ../asm80/parser.js
   var parse = async (s, opts) => {
     let i = toInternal(s.split(/\n/));
-    i = noncomments(i);
     i = nonempty(i);
     i = norm(i);
     let prei = await prepro(i, opts);
@@ -3129,7 +3151,16 @@
     return i;
   };
 
-  // cpu/z80.js
+  // stub:./cpu/i8080.js
+  var I8080 = {};
+
+  // stub:./cpu/m6800.js
+  var M6800 = {};
+
+  // stub:./cpu/c6502.js
+  var C6502 = {};
+
+  // ../asm80/cpu/z80.js
   var Z80 = {
     endian: false,
     cpu: "z80",
@@ -3757,23 +3788,23 @@
               reg1 = R16(par1);
               reg2 = R16(par2);
               var link1 = LINK(par1);
-              var link2 = LINK(par2);
-              if (reg1 >= 0 && !link2) {
+              var link22 = LINK(par2);
+              if (reg1 >= 0 && !link22) {
                 s.bytes = 3;
                 lens = [1 + (reg1 << 4), function(vars2) {
                   return Parser2.evaluate(par2, vars2);
                 }, null];
               }
-              if (reg1 >= 0 && link2) {
+              if (reg1 >= 0 && link22) {
                 s.bytes = [4, 4, 3, 4][reg1];
                 lens = [237, 75 + (reg1 << 4), function(vars2) {
-                  return Parser2.evaluate(link2, vars2);
+                  return Parser2.evaluate(link22, vars2);
                 }, null];
                 s.wia = 2;
                 if (s.bytes == 3) {
                   s.wia = 1;
                   lens = [42, function(vars2) {
-                    return Parser2.evaluate(link2, vars2);
+                    return Parser2.evaluate(link22, vars2);
                   }, null];
                 }
               }
@@ -3916,11 +3947,20 @@
     }
   };
 
-  // asm.js
-  var cpus = [Z80];
+  // stub:./cpu/i8008.js
+  var I8008 = {};
+
+  // stub:./cpu/cdp1802.js
+  var CDP1802 = {};
+
+  // stub:./cpu/m6809.js
+  var M6809 = {};
+
+  // ../asm80/asm.js
+  var cpus = [I8080, M6800, C6502, Z80, I8008, CDP1802, M6809];
   var compile = async (source, fileSystem, opts = { assembler: null }, filename = "noname") => {
     if (typeof opts.assembler == "string") {
-      opts.assembler = cpus.find((x) => x.cpu.toUpperCase() == opts.assembler.toUpperCase());
+      opts.assembler = cpus.find((x) => x?.cpu?.toUpperCase() == opts.assembler.toUpperCase());
     }
     if (!opts.assembler || typeof opts.assembler != "object") {
       throw { msg: "No assembler specified", s: "Assembler error" };
@@ -4009,7 +4049,7 @@
     let out = linkModules(linkList, modules, library);
     return out;
   };
-  ASM = {
+  var asm = {
     lst,
     html,
     compile,
@@ -4017,4 +4057,8 @@
     link,
     cpus
   };
+
+  // asm80-playground.js
+  var { lst: lst2, html: html2, compile: compile2, compileFromFile: compileFromFile2, link: link2, cpus: cpus2 } = asm;
+  return __toCommonJS(asm80_playground_exports);
 })();

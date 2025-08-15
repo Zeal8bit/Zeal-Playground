@@ -21,11 +21,7 @@ def build_manifest(files):
     return output
 
 def main():
-    if len(sys.argv) < 1:
-        print(f"Usage: {sys.argv[0]} <directory> [file_to_modify]")
-        sys.exit(1)
-
-    root_dir = sys.argv[1]
+    root_dir = sys.argv[1] if len(sys.argv) > 1 else "files/"
     target_file = sys.argv[2] if len(sys.argv) > 2 else 'files/manifest.json'
 
     files = generate_file_list(root_dir)
