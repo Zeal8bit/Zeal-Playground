@@ -2971,7 +2971,7 @@ var ASM = (() => {
           fullni = ni;
           ni = findBlock(ni, block, opts);
         }
-        const preni = await prepro(ni, {}, fullni);
+        const preni = await prepro(ni, opts, fullni);
         for (const preniItem of preni[0]) {
           preniItem.includedFile = params[0].replace(/\"/g, "");
           preniItem.includedFileAtLine = item.numline;
