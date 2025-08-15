@@ -14,7 +14,6 @@
   });
 
   canvas.addEventListener('wheel', (e) => {
-    console.log('wheel', e);
     emulator.scrollLeft += e.deltaX;
     emulator.scrollTop += e.deltaY;
   });
