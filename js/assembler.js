@@ -1,9 +1,21 @@
 function get_bytes(obj) {
   var bytes = [];
+  var pc = -1;
   obj.dump.forEach(function (entry) {
     if (!entry.lens) return;
+    /* Initialize the PC if not initialized yet */
+    if (pc == -1) {
+      pc = entry.addr;
+    } else if (pc < entry.addr) {
+      /* Gap between current PC and the instruction address */
+      for (var i = 0; i < entry.addr - pc; i++) {
+        bytes.push(0x00);
+      }
+      pc = entry.addr;
+    }
     /* Concat the two arrays */
     bytes.push(...entry.lens);
+    pc += entry.lens.length;
   });
   return bytes;
 }
