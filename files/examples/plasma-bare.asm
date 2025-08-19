@@ -37,13 +37,17 @@ IO_TEXT_CURS_TIME  .equ VID_IO_BANKED_ADDR + 0x6 ; Blink time, in frames, for th
 ; IO_TEXT_CURS_CHAR  .equ VID_IO_BANKED_ADDR + 0x7 ; Blink time, in frames, for the cursor
 ; IO_TEXT_CURS_COLOR .equ VID_IO_BANKED_ADDR + 0x8 ; Blink time, in frames, for the cursor
 
-CHARCODE_OFFSET    .equ 0x000
-COLORCODE_OFFSET   .equ 0x100
-SINECOSINE_OFFSET  .equ 0x200
 
 ; this should already be aligned to 0x100
 ; ALIGN 0x100
 TABLES .equ PAGE3_VIRT_ADDR
+CHARCODE_OFFSET    .equ TABLES + 0x000
+COLORCODE_OFFSET   .equ TABLES + 0x100
+SINECOSINE_OFFSET  .equ TABLES + 0x200
+
+PTR_SIN .equ TABLES + 0x300
+PTR_COS .equ TABLES + 0x302
+
 
 ; first step is to create a table with sine + cosine values
 ; The addition is performed on a proportionate basis
@@ -62,6 +66,12 @@ _start:
     ; map VRAM to 0x8000
     ld a, VID_MEM_PHYS_ADDR_START / 16384
     out (MMU_PAGE_2), a
+
+    ld hl, tbl_sin
+    ld (PTR_SIN), hl
+
+    ld hl, tbl_cos
+    ld (PTR_COS), hl
 ;
 
 ; generate charcode table
@@ -70,7 +80,7 @@ _start:
     ;   repeat each byte in charcodes 16 times, generating a 256-byte table
     ;
     ld de, charcodes + 0x0F                 ; last charcode
-    ld hl, TABLES + CHARCODE_OFFSET + 0xFF  ; end of table
+    ld hl, CHARCODE_OFFSET + 0xFF  ; end of table
 next_charcode:
     ld a, (de)
     ld bc, 15               ; count down from
@@ -93,7 +103,7 @@ charcode_done:
     ;   Generate the Colorcode Table
     ;
     ld de, colorcodes + 0x0F
-    ld hl, TABLES + COLORCODE_OFFSET + 0xFF
+    ld hl, COLORCODE_OFFSET + 0xFF
 next_colorcode:
     ld a, (de)
     ld bc, 15
@@ -113,10 +123,10 @@ colorcode_done:
 loop:
     ld a, ROWS+COLUMNS
 hl_addr:
-    ld hl, tbl_sin          ; self modifiying
+    ld hl, (PTR_SIN)          ; self modifiying
 bc_addr:
-    ld bc, tbl_cos          ; self modifying
-    ld de, TABLES + SINECOSINE_OFFSET
+    ld bc, (PTR_COS)          ; self modifying
+    ld de, SINECOSINE_OFFSET
 sincos_loop:
     push af
     ld a, (bc)
@@ -130,16 +140,16 @@ sincos_loop:
     jp nz, sincos_loop
 
     ; modify the table offsets
-    ld hl, hl_addr + 1
+    ld hl, PTR_SIN
     inc (hl)
-    ld hl, bc_addr + 1
+    ld hl, PTR_COS
     dec (hl)
 
 ;
     ld c, ROWS-1     ; for(row = ROWS; row > 0; row--)
     ld hl, VRAM_TEXT
     ; sinecosine[COLUMNS + row] will be preclaculated and decremented at eaach row iteraiton
-    ld de, TABLES + SINECOSINE_OFFSET + COLUMNS + ROWS
+    ld de, SINECOSINE_OFFSET + COLUMNS + ROWS
 row_loop:
     ; sinecosine is aligned on 256 bytes for sure
     dec e
@@ -152,7 +162,7 @@ col_loop:
     ; The code below doesn't modify DE, nor C !
 
     push hl
-    ld hl, TABLES + SINECOSINE_OFFSET           ; HL = &sinecosine
+    ld hl, SINECOSINE_OFFSET           ; HL = &sinecosine
     ld l, e                         ; HL = &sinecosine[COLUMN]
     ld a, (hl)                      ; A = sinecosine[COLUMN]
     add a, d                           ; A += offset
@@ -160,7 +170,7 @@ col_loop:
     ; lsa a
     ; Since charcode is aligned on 256, its lower byte is 0x00 for sure.
     ; So HL + A is HA
-    ld hl, TABLES + CHARCODE_OFFSET
+    ld hl, CHARCODE_OFFSET
     ld l, a
     ld b, (hl)                      ; B = charcode[offset]
 
