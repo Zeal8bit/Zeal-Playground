@@ -43,12 +43,18 @@ async function assemble() {
     const hexView = document.getElementById('hex-view');
     const listView = document.getElementById('list-view');
     const hex = bytes
-      .map((b, i) => {
-        const byte = b.toString(16).padStart(2, '0');
-        // Add a newline after every 16th byte, except the last one
-        return (i + 1) % 16 === 0 ? byte + '\n' : byte + ' ';
-      })
-      .join('');
+      .map((b, i) => b.toString(16).padStart(2, '0'))
+      .reduce((acc, byte, i) => {
+        if (i % 16 === 0) {
+          acc += i.toString(16).padStart(4, '0') + ': ';
+        }
+        acc += byte + ' ';
+        if ((i + 1) % 16 === 0) {
+          acc += '\n';
+        }
+
+        return acc;
+      }, '');
 
     hexView.textContent = hex;
     listView.textContent = list;
