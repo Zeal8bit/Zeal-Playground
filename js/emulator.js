@@ -80,7 +80,15 @@
     }
 
     output.innerHTML = '';
+    const fileName = editor.fileName.split('/').slice(-1).join('').split('.').slice(0, -1).join('.') + '.bin';
+    let loadArg = '-r';
+    switch (uses) {
+      case 'zealos':
+        loadArg = '-u';
+        break;
+    }
     const defaultModule = {
+      arguments: [loadArg, `/${fileName}`],
       print: log('info'),
       printErr: log('error'),
       get canvas() {
@@ -88,14 +96,9 @@
         return canvas;
       },
       onRuntimeInitialized: function () {
-        const path = uses == 'zealos' ? '/user.bin' : '/roms/default.img';
-        this.FS.writeFile(path, data);
+        this.FS.writeFile(`/${fileName}`, data);
       },
     };
-
-    if (uses == 'zealos') {
-      defaultModule.arguments = ['-u', '/user.bin'];
-    }
 
     Module(defaultModule).then((mod) => {
       instance = mod;
