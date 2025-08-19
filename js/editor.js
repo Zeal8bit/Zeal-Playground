@@ -127,6 +127,7 @@
   editorEl.openFile = (o) => {
     editor.fileName = o.name;
     fileName.textContent = o.name ?? '* new file';
+    editorEl.fileName = o.name;
     editor.setValue(o.text);
 
     const reUses = /^\s*;\s+@uses\s+(\S+)\s*$/m;

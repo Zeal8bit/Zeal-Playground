@@ -19,20 +19,20 @@ ROWS       .equ 40
 ; VID_MEM_LAYER1_ADDR        .equ VID_MEM_PHYS_ADDR_START + 0x1000
 
 VID_IO_CTRL_STAT           .equ 0x90
-IO_CTRL_VID_MODE           .equ VID_IO_CTRL_STAT + 0xc
-IO_CTRL_STATUS_REG         .equ VID_IO_CTRL_STAT + 0xd
+; IO_CTRL_VID_MODE           .equ VID_IO_CTRL_STAT + 0xc
+; IO_CTRL_STATUS_REG         .equ VID_IO_CTRL_STAT + 0xd
 
 VID_IO_BANKED_ADDR .equ 0xA0
-BANK_IO_TEXT_NUM   .equ 0 ; Text control module, usable in text mode (640x480 or 320x240)
-IO_TEXT_PRINT_CHAR .equ VID_IO_BANKED_ADDR + 0x0
-IO_TEXT_CURS_Y     .equ VID_IO_BANKED_ADDR + 0x1 ; Cursor Y position (in characters count)
-IO_TEXT_CURS_X     .equ VID_IO_BANKED_ADDR + 0x2 ; Cursor X position (in characters count)
-IO_TEXT_SCROLL_Y   .equ VID_IO_BANKED_ADDR + 0x3 ; Scroll Y
-IO_TEXT_SCROLL_X   .equ VID_IO_BANKED_ADDR + 0x4 ; Scroll X
-IO_TEXT_COLOR      .equ VID_IO_BANKED_ADDR + 0x5 ; Current character color
+; BANK_IO_TEXT_NUM   .equ 0 ; Text control module, usable in text mode (640x480 or 320x240)
+; IO_TEXT_PRINT_CHAR .equ VID_IO_BANKED_ADDR + 0x0
+; IO_TEXT_CURS_Y     .equ VID_IO_BANKED_ADDR + 0x1 ; Cursor Y position (in characters count)
+; IO_TEXT_CURS_X     .equ VID_IO_BANKED_ADDR + 0x2 ; Cursor X position (in characters count)
+; IO_TEXT_SCROLL_Y   .equ VID_IO_BANKED_ADDR + 0x3 ; Scroll Y
+; IO_TEXT_SCROLL_X   .equ VID_IO_BANKED_ADDR + 0x4 ; Scroll X
+; IO_TEXT_COLOR      .equ VID_IO_BANKED_ADDR + 0x5 ; Current character color
 IO_TEXT_CURS_TIME  .equ VID_IO_BANKED_ADDR + 0x6 ; Blink time, in frames, for the cursor
-IO_TEXT_CURS_CHAR  .equ VID_IO_BANKED_ADDR + 0x7 ; Blink time, in frames, for the cursor
-IO_TEXT_CURS_COLOR .equ VID_IO_BANKED_ADDR + 0x8 ; Blink time, in frames, for the cursor
+; IO_TEXT_CURS_CHAR  .equ VID_IO_BANKED_ADDR + 0x7 ; Blink time, in frames, for the cursor
+; IO_TEXT_CURS_COLOR .equ VID_IO_BANKED_ADDR + 0x8 ; Blink time, in frames, for the cursor
 
 CHARCODE_OFFSET    .equ 0x000
 COLORCODE_OFFSET   .equ 0x100
@@ -289,5 +289,5 @@ tbl_cos:
 ;
 
 ; this should already be aligned to 0x100
-; ALIGN 0x100
+; .ALIGN 0x100
 TABLES:

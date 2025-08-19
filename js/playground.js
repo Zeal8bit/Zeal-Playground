@@ -68,6 +68,22 @@ async function code_stop() {
   editor.classList.add('expand');
 }
 
+async function download_binary() {
+  const bytes = await assemble();
+  const data = new Uint8Array(bytes);
+  const blob = new Blob([data], { type: 'application/octen-stream' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  const fileName = editor.fileName.split('/').slice(-1).join('').split('.').slice(0, -1).join('.') + '.bin';
+  a.download = fileName;
+  document.body.append(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 /**
  * Resize Handler
  */
