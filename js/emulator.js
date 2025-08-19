@@ -4,6 +4,9 @@
   const controls = emulator.querySelector('.controls');
   const output = emulator.querySelector('.output');
   const canvas = emulator.querySelector('canvas');
+
+  const enableZealOS = document.querySelector('input[name=enable_zealos]');
+
   let instance = null;
 
   canvas.addEventListener('keydown', (e) => {
@@ -70,9 +73,14 @@
         return canvas;
       },
       onRuntimeInitialized: function () {
-        this.FS.writeFile('/roms/default.img', data);
+        const path = enableZealOS.checked ? '/user.bin' : '/roms/default.img';
+        this.FS.writeFile(path, data);
       },
     };
+
+    if (enableZealOS.checked) {
+      defaultModule.arguments = ['-u', '/user.bin'];
+    }
 
     Module(defaultModule).then((mod) => {
       instance = mod;
