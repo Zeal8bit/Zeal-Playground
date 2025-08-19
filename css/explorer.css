@@ -104,8 +104,21 @@
         color: var(--c-900);
         cursor: pointer;
 
+        .control {
+            margin-left: auto;
+            display: none;
+
+            &:hover {
+                color: var(--error);
+            }
+        }
+
         &:hover {
             background-color: color-mix(in srgb, var(--c-border) 80%, black);
+
+            .control {
+                display: block;
+            }
         }
 
         &.active {

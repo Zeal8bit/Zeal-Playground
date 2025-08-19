@@ -115,19 +115,41 @@
   }
   explorer.openFile = openFile;
 
-  function addFile(name, path) {
+  function deleteFile(path) {
+    let name = path.split('/').slice(1).join('/');
+    localStorage.removeItem(`file:${name}`);
+    refreshUser();
+    return true;
+  }
+  explorer.deleteFile = deleteFile;
+
+  function addFile(name, path, options = {}) {
+    const { writable = false } = options;
+
     const a = document.createElement('a');
     a.classList.add('file-item');
     const i = document.createElement('icon');
     i.classList.add('fa-solid', 'fa-file-code');
     a.appendChild(document.createTextNode(name));
-
     a.addEventListener('click', (e) => openFile(path));
+
+    if (writable) {
+      const del = document.createElement('icon');
+      del.classList.add('fa-solid', 'fa-trash', 'control');
+      a.appendChild(del);
+
+      del.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteFile(path);
+      });
+    }
     return a;
   }
 
-  function addFolder(name, objects) {
+  function addFolder(name, objects, options = {}) {
     const { files, ...folders } = objects;
+    const { writable = false } = options;
 
     // <details open>
     //   <summary class="file-item">
@@ -160,7 +182,7 @@
     details.appendChild(children);
 
     for (const folder of keySort(folders)) {
-      children.appendChild(addFolder(folder, folders[folder]));
+      children.appendChild(addFolder(folder, folders[folder], options));
     }
 
     if (files?.length) {
@@ -169,7 +191,7 @@
 
       for (const o of files.sort((a, b) => a.name.localeCompare(b.name))) {
         const { name, path } = o;
-        list.appendChild(addFile(name, path));
+        list.appendChild(addFile(name, path, options));
       }
       children.append(list);
     }
@@ -177,9 +199,10 @@
     return details;
   }
 
-  function renderTree(tree, insertBefore = false) {
+  function renderTree(tree, options = {}) {
+    const { insertBefore = false } = options;
     for (let folder of keySort(tree)) {
-      const details = addFolder(folder, tree[folder]);
+      const details = addFolder(folder, tree[folder], options);
 
       if (insertBefore) {
         fileList.insertBefore(details, fileList.firstChild);
@@ -203,7 +226,10 @@
     })();
     const userFiles = buildFileTree(USER_FILES);
     explorer.querySelector('#folder-user')?.remove();
-    renderTree(userFiles, true);
+    renderTree(userFiles, {
+      insertBefore: true,
+      writable: true,
+    });
   }
 
   explorer.refreshUser = refreshUser;
