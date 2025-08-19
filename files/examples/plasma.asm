@@ -1,3 +1,5 @@
+    ; @uses zealos
+
     ; Include the Zeal 8-bit OS header file, containing all the syscalls macros.
     .include "headers/zos_sys.asm"
     .include "headers/zvb.asm"

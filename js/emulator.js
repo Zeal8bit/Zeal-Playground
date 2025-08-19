@@ -1,6 +1,17 @@
 (() => {
   /* WebASM related */
   const emulator = document.getElementById('emulator');
+  let uses;
+  Object.defineProperty(emulator, 'uses', {
+    get() {
+      return uses;
+    },
+    set(v) {
+      uses = v;
+      enableZealOS.checked = uses == 'zealos';
+    },
+  });
+
   const controls = emulator.querySelector('.controls');
   const output = emulator.querySelector('.output');
   const canvas = emulator.querySelector('canvas');
@@ -52,6 +63,10 @@
     };
   }
 
+  enableZealOS.addEventListener('change', (e) => {
+    uses = e.target.checked ? 'zealos' : '';
+  });
+
   emulator.reload = (data) => {
     console.log('reloadEmulator', data);
 
@@ -73,12 +88,12 @@
         return canvas;
       },
       onRuntimeInitialized: function () {
-        const path = enableZealOS.checked ? '/user.bin' : '/roms/default.img';
+        const path = uses == 'zealos' ? '/user.bin' : '/roms/default.img';
         this.FS.writeFile(path, data);
       },
     };
 
-    if (enableZealOS.checked) {
+    if (uses == 'zealos') {
       defaultModule.arguments = ['-u', '/user.bin'];
     }
 

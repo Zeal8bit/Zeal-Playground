@@ -129,6 +129,20 @@
     fileName.textContent = o.name ?? '* new file';
     editor.setValue(o.text);
 
+    const reUses = /^\s*;\s+@uses\s+(\S+)\s*$/m;
+    const mUses = o.text.match(reUses);
+    console.log('mUses', mUses);
+    if (mUses) {
+      switch (mUses[1]) {
+        case 'zealos':
+          console.log('enable zealos');
+          emulator.uses = 'zealos';
+          break;
+      }
+    } else {
+      emulator.uses = null;
+    }
+
     const lineCount = editor.lineCount();
     let lastEmptyLine = 0;
     for (let i = 0; i < lineCount; i++) {
