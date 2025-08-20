@@ -88,7 +88,7 @@
         break;
     }
     const defaultModule = {
-      arguments: [loadArg, `/${fileName}`],
+      arguments: [loadArg, `/user/${fileName}`],
       print: log('info'),
       printErr: log('error'),
       get canvas() {
@@ -96,11 +96,12 @@
         return canvas;
       },
       onRuntimeInitialized: function () {
-        this.FS.writeFile(`/${fileName}`, data);
+        this.FS.mkdir('/user');
+        this.FS.writeFile(`/user/${fileName}`, data);
       },
     };
 
-    Module(defaultModule).then((mod) => {
+    NativeModule(defaultModule).then((mod) => {
       instance = mod;
 
       const show_fps = !!parseInt(localStorage.getItem('show_fps') || 0);

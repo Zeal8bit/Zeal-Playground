@@ -127,16 +127,14 @@
   editorEl.openFile = (o) => {
     editor.fileName = o.name;
     fileName.textContent = o.name ?? '* new file';
-    editorEl.fileName = o.name;
+    editorEl.fileName = o.name ?? null;
     editor.setValue(o.text);
 
     const reUses = /^\s*;\s+@uses\s+(\S+)\s*$/m;
     const mUses = o.text.match(reUses);
-    console.log('mUses', mUses);
     if (mUses) {
       switch (mUses[1]) {
         case 'zealos':
-          console.log('enable zealos');
           emulator.uses = 'zealos';
           break;
       }
