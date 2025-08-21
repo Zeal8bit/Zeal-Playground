@@ -4099,7 +4099,7 @@ var GnuObjCopyModule = (() => {
         readyPromiseResolve?.(Module);
         Module['onRuntimeInitialized']?.();
 
-        var noInitialRun = Module['noInitialRun'] || false;
+        var noInitialRun = Module['noInitialRun'] || true;
         if (!noInitialRun) callMain(args);
 
         postRun();
@@ -4155,8 +4155,8 @@ var GnuObjCopyModule = (() => {
 
 // Export using a UMD style export, or ES6 exports if selected
 if (typeof exports === 'object' && typeof module === 'object') {
-  module.exports = ModuleObjCpy;
+  module.exports = GnuObjcopy;
   // This default export looks redundant, but it allows TS to import this
   // commonjs style module.
-  module.exports.default = ModuleObjCpy;
-} else if (typeof define === 'function' && define['amd']) define([], () => ModuleObjCpy);
+  module.exports.default = GnuObjcopy;
+} else if (typeof define === 'function' && define['amd']) define([], () => GnuObjcopy);

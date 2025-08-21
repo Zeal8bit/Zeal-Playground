@@ -381,7 +381,7 @@ var GnuLdModule = (() => {
     var wasmBinaryFile;
 
     function findWasmBinary() {
-      return locateFile('ld-new.wasm');
+      return locateFile('ld.wasm');
     }
 
     function getBinarySync(file) {
@@ -4347,7 +4347,7 @@ var GnuLdModule = (() => {
         readyPromiseResolve?.(Module);
         Module['onRuntimeInitialized']?.();
 
-        var noInitialRun = Module['noInitialRun'] || false;
+        var noInitialRun = Module['noInitialRun'] || true;
         if (!noInitialRun) callMain(args);
 
         postRun();
@@ -4403,8 +4403,8 @@ var GnuLdModule = (() => {
 
 // Export using a UMD style export, or ES6 exports if selected
 if (typeof exports === 'object' && typeof module === 'object') {
-  module.exports = Module;
+  module.exports = GnuLdZ80;
   // This default export looks redundant, but it allows TS to import this
   // commonjs style module.
-  module.exports.default = Module;
-} else if (typeof define === 'function' && define['amd']) define([], () => Module);
+  module.exports.default = GnuLdZ80;
+} else if (typeof define === 'function' && define['amd']) define([], () => GnuLdZ80);
