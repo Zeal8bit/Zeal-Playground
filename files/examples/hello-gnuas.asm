@@ -11,10 +11,10 @@ TEXT_CTRL_CTRL_NEXTLINE       .equ 0
 
 
   .text
-  ; .global _start
+  .global _start
 _start:
   ld hl, message
-print_loop:
+_print_loop:
   ld a, (hl)
   or a
   jr z, print_done

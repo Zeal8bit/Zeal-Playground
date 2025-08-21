@@ -124,7 +124,16 @@ class GnuToolchain {
       ...this.defaultModule,
       printErr: (msg, ...args) => {
         this.defaultModule.printErr(msg, ...args);
-        this.errors.push({ source: 'as', message: msg });
+        const regex = /^(?!.*warning:).*?(?:([\w\/\.\-]+):(\d+):)?/;
+
+        const match = msg.match(regex);
+        const [_, filename, lineNum] = match;
+        this.errors.push({
+          source: 'ld',
+          filename,
+          lineNum,
+          message: msg,
+        });
       },
     });
 
@@ -165,8 +174,15 @@ class GnuToolchain {
       ...this.defaultModule,
       printErr: (msg, ...args) => {
         this.defaultModule.printErr(msg, ...args);
+
+        const regex = /^(?!.*warning:).*?(?:([\w\/\.\-]+):(\d+):)?/;
+
+        const match = msg.match(regex);
+        const [_, filename, lineNum] = match;
         this.errors.push({
           source: 'ld',
+          filename,
+          lineNum,
           message: msg,
         });
       },

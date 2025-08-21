@@ -100,6 +100,10 @@ async function assemble() {
     document.getElementById('log').textContent = 'No binary file was produced, check for errors';
     errors?.forEach((err) => {
       hexView.textContent += `${err.source}: ${err.message}\n`;
+      if (err.lineNum) {
+        hexView.textContent += `Line: ${err.filename}:${err.lineNum}\n`;
+        editor.gotoLine(err.lineNum - 1, { error: true });
+      }
     });
     return;
   }
