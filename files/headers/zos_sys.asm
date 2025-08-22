@@ -1,23 +1,22 @@
-; SPDX-FileCopyrightText: 2023 Zeal 8-bit Computer <contact@zeal8bit.com>
+; SPDX-FileCopyrightText: 2024 Zeal 8-bit Computer <contact@zeal8bit.com>
 ;
 ; SPDX-License-Identifier: Apache-2.0
 
-    ; INCLUDE "zos_err.asm"
+    .include "zos_err.asm"
 
-    ; IFNDEF ZOS_SYS_HEADER
-    ; DEFINE ZOS_SYS_HEADER
+    .equiv ZOS_SYS_HEADER, 1
 
     ; @brief Opened device value for the standard output
-    DEV_STDOUT .equ 0
+    .equ DEV_STDOUT, 0
 
     ; @brief Opened device value for the standard input
-    DEV_STDIN .equ 1
+    .equ DEV_STDIN, 1
 
     ; @brief Maximum length for a file/directory name
-    FILENAME_LEN_MAX .equ 16
+    .equ FILENAME_LEN_MAX, 16
 
     ; @brief Maximum length for a path
-    PATH_MAX .equ 128
+    .equ PATH_MAX, 128
 
     ; @note In the syscalls below, any pointer, buffer or structure address
     ; provided with an explicit or implicit (sizeof structure) size must NOT
@@ -40,19 +39,15 @@
     ;  -           So, if used with O_RDWR, reading after a write will read 0.
     ;  - O_TRUNC: No matter if O_RDWR or O_WRONLY, the size is first set to
     ;  -          0 before any other operation occurs.
-    O_WRONLY_BIT .equ 0
-    O_RDONLY .equ 0x00 ; 0 << O_WRONLY_BIT
-    O_WRONLY .equ 0x01 ; 1 << O_WRONLY_BIT
-    O_RDWR   .equ 2
-    O_TRUNC  .equ 0x02 ; 1 << 2
-    O_APPEND .equ 0x08 ; 2 << 2
-    O_CREAT  .equ 0x0F ; 4 << 2
+    .equ O_WRONLY_BIT, 0
+    .equ O_RDONLY, 0 << O_WRONLY_BIT
+    .equ O_WRONLY, 1 << O_WRONLY_BIT
+    .equ O_RDWR  , 2
+    .equ O_TRUNC , 1 << 2
+    .equ O_APPEND, 2 << 2
+    .equ O_CREAT , 4 << 2
     ; Only makes sense for drivers, not files
-    O_NONBLOCK .equ 0x10 ; 1 << 5
-
-    ; Flags for directory entry and file stat
-    D_ISFILE  .equ 1
-    D_ISDIR   .equ 0
+    .equ O_NONBLOCK, 1 << 5
 
     ; @brief Directory entry size, in bytes.
     ; Its content would be represented like this in C:
@@ -60,7 +55,7 @@
     ;     uint8_t d_flags;
     ;     char    d_name[FILENAME_LEN_MAX];
     ; }
-    ZOS_DIR_ENTRY_SIZE .equ 1 + FILENAME_LEN_MAX
+    .equ ZOS_DIR_ENTRY_SIZE, 1 + FILENAME_LEN_MAX
 
     ; @brief Date structure size, in bytes.
     ; Its content would be represented like this in C:
@@ -74,25 +69,24 @@
     ;     uint8_t  d_seconds;
     ; }
     ; All the fields above are in BCD format.
-    ZOS_DATE_SIZE .equ 8
+    .equ ZOS_DATE_SIZE, 17
 
     ; @brief Stat file size, in bytes.
     ; Its content would be represented like this in C:
     ; struct {
-    ;     uint8_t    s_flags; // D_IS* flags
-    ;     uint32_t   s_size;  // in bytes
+    ;     uint32_t   s_size; // in bytes
     ;     zos_date_t s_date;
     ;     char       s_name[FILENAME_LEN_MAX];
     ; }
-    ZOS_STAT_SIZE .equ 1 + 4 + ZOS_DATE_SIZE + FILENAME_LEN_MAX
+    .equ ZOS_STAT_SIZE, 1 + ZOS_DATE_SIZE + FILENAME_LEN_MAX
 
     ; @brief Whence values. Check `seek` syscall for more info
-    SEEK_SET .equ 0
-    SEEK_CUR .equ 1
-    SEEK_END .equ 2
+    .equ SEEK_SET, 0
+    .equ SEEK_CUR, 1
+    .equ SEEK_END, 2
 
     ; @brief Filesystems supported on Zeal 8-bit OS
-    FS_RAWTABLE .equ 0
+    .equ FS_RAWTABLE, 0
 
     ; @brief Kernel configuration structure size, in bytes.
     ; Its content would be represented like this in C:
@@ -107,20 +101,20 @@
     ;     void*    c_prog_addr; // Virtual address where user programs are loaded
     ;     void*    c_custom;    // Custom area, target-specific
     ; } zos_config_t;
-    ZOS_CONFIG_SIZE .equ 12
+    .equ ZOS_CONFIG_SIZE, 12
 
     ; @brief Override caller program when invoking `exec`
-    EXEC_OVERRIDE_PROGRAM .equ 0
+    .equ EXEC_OVERRIDE_PROGRAM, 0
 
     ; @brief Keep the caller program in memory when invoking `exec`, until "child"
     ; program finishes its execution
-    EXEC_PRESERVE_PROGRAM .equ 1
+    .equ EXEC_PRESERVE_PROGRAM, 1
 
 
-    ; @brief Macro to abstract the syscall instruction
-    .MACRO SYSCALL
+    ; @brief .macro to abstract the syscall instruction
+    .macro SYSCALL
         rst 0x8
-    .ENDM
+    .endm
 
 
     ; @brief Read from an opened device.
@@ -134,41 +128,41 @@
     ; Returns:
     ;   A  - ERR_SUCCESS on success, error value else
     ;   BC - Number of bytes filled in DE.
-    .MACRO  READ
+    .macro  READ  _
         ld l, 0
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Helper for the READ syscall when the opened dev value is known
     ;        at assembly it.
     ;        Can be invoked with S_READ1(dev).
     ; Refer to READ() syscall for more info about the parameters and the returned values.
-    .MACRO S_READ1,dev
-        ld h, dev
+    .macro S_READ1 dev
+        ld h, \dev
         READ()
-    .ENDM
+    .endm
 
     ; @brief Helper for the READ syscall when the opened dev and the buffer are known
     ;        at assembly it.
     ;        Can be invoked with S_READ2(dev, buf).
     ; Refer to READ() syscall for more info about the parameters and the returned values.
-    .MACRO S_READ2,dev,buf
-        ld h, dev
-        ld de, buf
+    .macro S_READ2 dev, buf
+        ld h, \dev
+        ld de, \buf
         READ()
-    .ENDM
+    .endm
 
     ; @brief Helper for the READ syscall when the opened dev, the buffer and the size
     ;        are known at assembly it.
     ;        Can be invoked with S_READ3(dev, buf, size).
     ; Refer to READ() syscall for more info about the parameters and the returned values.
-    .MACRO S_READ3,dev,buf,len
-        ld h, dev
-        ld de, buf
-        ld bc, len
+    .macro S_READ3 dev, buf, len
+        ld h, \dev
+        ld de, \buf
+        ld bc, \len
         READ()
-    .ENDM
+    .endm
 
 
     ; @brief Write to an opened device.
@@ -181,41 +175,41 @@
     ; Returns:
     ;   A  - ERR_SUCCESS on success, error value else
     ;   BC - Number of bytes written
-    .MACRO  WRITE
+    .macro  WRITE  _
         ld l, 1
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Helper for the WRITE syscall when the opened dev value is known
     ;        at assembly it.
     ;        Can be invoked with S_WRITE1(dev).
     ; Refer to WRITE() syscall for more info about the parameters and the returned values.
-    .MACRO S_WRITE1,dev
-        ld h, dev
+    .macro S_WRITE1 dev
+        ld h, \dev
         WRITE()
-    .ENDM
+    .endm
 
     ; @brief Helper for the WRITE syscall when the opened dev and the buffer are known
     ;        at assembly it.
     ;        Can be invoked with S_WRITE2(dev, buf).
     ; Refer to WRITE() syscall for more info about the parameters and the returned values.
-    .MACRO S_WRITE2,dev,str
-        ld h, dev
-        ld de, str
+    .macro S_WRITE2 dev, str
+        ld h, \dev
+        ld de, \str
         WRITE()
-    .ENDM
+    .endm
 
     ; @brief Helper for the WRITE syscall when the opened dev, the buffer and the size
     ;        are known at assembly it.
     ;        Can be invoked with S_WRITE3(dev, buf, size).
     ; Refer to WRITE() syscall for more info about the parameters and the returned values.
-    .MACRO S_WRITE3,dev,str,len
-        ld h, dev
-        ld de, str
-        ld bc, len
+    .macro S_WRITE3 dev, str, len
+        ld h, \dev
+        ld de, \str
+        ld bc, \len
         WRITE()
-    .ENDM
+    .endm
 
 
     ; @brief Open the given file or driver.
@@ -233,10 +227,10 @@
     ;       It is possible to OR them.
     ; Returns:
     ;   A - Number of the newly opened dev on success, negated error value else.
-    .MACRO  OPEN
+    .macro  OPEN  _
         ld l, 2
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Close an opened device. It is necessary to keep the least minimum
@@ -248,10 +242,10 @@
     ;   H - Number of the dev to close
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else
-    .MACRO  CLOSE
+    .macro  CLOSE  _
         ld l, 3
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Return the stats of an opened file.
@@ -264,10 +258,10 @@
     ;        The memory pointed must be big enough to store the file information.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error else
-    .MACRO  DSTAT
+    .macro  DSTAT  _
         ld l, 4
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Return the stats of a file.
@@ -280,10 +274,10 @@
     ;        The memory pointed must be big enough to store the file information.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error else
-    .MACRO  STAT
+    .macro  STAT  _
         ld l, 5
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Move the cursor of an opened file or an opened driver.
@@ -308,10 +302,10 @@
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else.
     ;   BCDE - Unsigned 32-bit offset. Resulting file offset.
-    .MACRO  SEEK
+    .macro  SEEK  _
         ld l, 6
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Perform an input/output operation on an opened driver.
@@ -327,10 +321,10 @@
     ;        address, it must not cross a page boundary.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else
-    .MACRO  IOCTL
+    .macro  IOCTL  _
         ld l, 7
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Create a directory at the specified location.
@@ -343,10 +337,10 @@
     ;   DE - Path of the directory to create, including the NULL-terminator. Must NOT cross boundaries.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else.
-    .MACRO  MKDIR
+    .macro  MKDIR  _
         ld l, 8
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Change the current working directory path.
@@ -356,10 +350,10 @@
     ;   DE - Path to the new working directory. The string must be NULL-terminated.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else.
-    .MACRO  CHDIR
+    .macro  CHDIR  _
         ld l, 9
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Get the current working directory.
@@ -370,10 +364,10 @@
     ;        to store a least PATH_MAX bytes.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else
-    .MACRO  CURDIR
+    .macro  CURDIR  _
         ld l, 10
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Open a directory given a path.
@@ -389,10 +383,10 @@
     ;        * Absolute to the system ("A:/dir1")
     ; Returns:
     ;   A - Number for the newly opened dev on success, negated error value else.
-    .MACRO  OPENDIR
+    .macro  OPENDIR  _
         ld l, 11
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Read the next entry from the given opened directory.
@@ -407,10 +401,10 @@
     ;   A  - ERR_SUCCESS on success,
     ;        ERR_NO_MORE_ENTRIES if all the entries have been browsed already,
     ;        error value else.
-    .MACRO  READDIR
+    .macro  READDIR  _
         ld l, 12
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Remove a file or an empty directory.
@@ -421,10 +415,10 @@
     ;        NULL-terminated, can be a relative, relative to the disk, or absolute path.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else.
-    .MACRO  RM
+    .macro  RM  _
         ld l, 13
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Mount a new disk, given a driver, a letter and a file system.
@@ -435,13 +429,13 @@
     ;   H - Opened dev number. It must be an opened driver, not a file. The dev can be closed
     ;       after mounting, this will not affect the mounted disk.
     ;   D - ASCII letter to assign to the disk (upper or lower)
-    ;   E - File system, check the FS_* macro defined at the top of this file.
+    ;   E - File system, check the FS_* .macro defined at the top of this file.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else
-    .MACRO  MOUNT
+    .macro  MOUNT  _
         ld l, 14
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Exit the program and give back the hand to the kernel. If the caller program invoked
@@ -453,10 +447,10 @@
     ;   H - Return code to pass to caller program
     ; Returns:
     ;   None
-    .MACRO  EXIT
+    .macro  EXIT  _
         ld l, 15
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Load and execute a program from a file name given as a parameter.
@@ -485,10 +479,10 @@
     ; Alters:
     ;   Contrarily to other syscalls, invoking EXEC() will not preserve AF, BC, DE, IX, IY.
     ;   Only HL is guaranteed to be preserved.
-    .MACRO  EXEC
+    .macro  EXEC  _
         ld l, 16
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Duplicate the given opened dev to a new index. This will only
@@ -503,10 +497,10 @@
     ;   E - New number for the opened dev.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else
-    .MACRO  DUP
+    .macro  DUP  _
         ld l, 17
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Sleep for a specified duration.
@@ -516,10 +510,10 @@
     ;   DE - 16-bit duration (maximum 65 seconds).
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else.
-    .MACRO  MSLEEP
+    .macro  MSLEEP  _
         ld l, 18
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Routine to manually set/reset the time counter, in milliseconds.
@@ -531,10 +525,10 @@
     ; Returns:
     ;   A - ERR_SUCCESS on success, ERR_NOT_IMPLEMENTED if target doesn't implement
     ;       this feature error code else.
-    .MACRO  SETTIME
+    .macro  SETTIME  _
         ld l, 19
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Get the time counter, in milliseconds.
@@ -549,10 +543,10 @@
     ;   A - ERR_SUCCESS on success, ERR_NOT_IMPLEMENTED if target doesn't implement
     ;       this feature, error code else.
     ;   DE - 16-bit counter value, in milliseconds.
-    .MACRO  GETTIME
+    .macro  GETTIME  _
         ld l, 20
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Set the system date, on targets where RTC is available.
@@ -564,10 +558,10 @@
     ; Returns:
     ;   A - ERR_SUCCESS on success, ERR_NOT_IMPLEMENTED if target doesn't implement
     ;       this feature, error code else
-    .MACRO  SETDATE
+    .macro  SETDATE  _
         ld l, 21
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Get the system date, on targets where RTC is available.
@@ -579,10 +573,10 @@
     ; Returns:
     ;   A - ERR_SUCCESS on success, ERR_NOT_IMPLEMENTED if target doesn't implement
     ;       this feature, error code else
-    .MACRO  GETDATE
+    .macro  GETDATE  _
         ld l, 22
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Map a physical address/region to a virtual address/region.
@@ -597,10 +591,10 @@
     ;         Similarly to the virtual address, the value may be rounded down to the closest page bound.
     ; Returns:
     ;   ERR_SUCCESS on success, error code else.
-    .MACRO  MAP
+    .macro  MAP  _
         ld l, 23
         SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Swap the given opened devs. This can be handy to temporarily override the
@@ -612,42 +606,10 @@
     ;   E - Second dev number.
     ; Returns:
     ;   A - ERR_SUCCESS on success, error code else
-    .MACRO  SWAP
+    .macro  SWAP  _
         ld l, 24
         SYSCALL
-    .ENDM
-
-
-    ; @brief Allocate a RAM page, of size 16KB. The returned value is a page index, which represents
-    ;        the uppest 8-bit of the physical memory address. It can be passed to pfree to release the page.
-    ;        The newly allocated page can be mapped via `map` syscall.
-    ;        Can be invoked with PALLOC().
-    ;
-    ; Parameters:
-    ;   None
-    ; Returns:
-    ;   A - ERR_SUCCESS on success
-    ;       ERR_NO_MORE_MEMORY if no free RAM page is available
-    ;   B - Allocated page index (if A is ERR_SUCCESS)
-    .MACRO  PALLOC
-        ld l, 25
-        SYSCALL
-    .ENDM
-
-
-    ; @brief Free a previously allocate RAM page. It is NOT possible to free a page that was allocated by
-    ;        another program.
-    ;        Can be invoked with PFREE().
-    ;
-    ; Parameters:
-    ;   B - Page index to free
-    ; Returns:
-    ;   A - ERR_SUCCESS on success
-    ;       ERR_INVALID_PARAMETER if the page was not allocated by the current program
-    .MACRO  PFREE
-        ld l, 26
-        SYSCALL
-    .ENDM
+    .endm
 
 
     ; @brief Get a read-only pointer to the kernel configuration.
@@ -658,8 +620,6 @@
     ;   PAIR - Address of the configuration structure. It is guaranteed that the structure won't
     ;          be spread across two 256-byte pages. In other words, it is possible to browse the
     ;          structure by performing 8-bit arithmetic (`inc l` for example).
-    .MACRO KERNEL_CONFIG,PAIR
-        ld PAIR, (0x0004)
-    .ENDM
-
-    ; ENDIF ; ZOS_SYS_HEADER
+    .macro KERNEL_CONFIG PAIR
+        ld \PAIR, (0x0004)
+    .endm

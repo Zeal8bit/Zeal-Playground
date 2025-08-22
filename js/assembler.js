@@ -56,7 +56,7 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
       return results;
     }
 
-    const includeUrl = new URL(`files/headers/gnu-as/${includePath}`, `${rootUrl}`);
+    const includeUrl = new URL(`files/headers/${includePath}`, `${rootUrl}`);
 
     if (!visited.has(includeUrl)) {
       // Fetch included file
