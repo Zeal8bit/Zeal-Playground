@@ -4,10 +4,7 @@
   ; using PRINT_CHAR register and DO_NL bit of CTRL
 
   .include "zos_sys.asm"
-
-TEXT_CTRL_CTRL                .equ 0xa9
-TEXT_CTRL_PRINT_CHAR          .equ 0xa0
-TEXT_CTRL_CTRL_NEXTLINE       .equ 0
+  .include "zvb_hardware_h.asm"
 
 
   .text

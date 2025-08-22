@@ -53,7 +53,7 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
       if (!visited.has(localPath)) {
         await parseIncludesFromString(rootUrl, localPath, localContents.text, results, visited);
       }
-      return results;
+      continue;
     }
 
     const includeUrl = new URL(`files/headers/${includePath}`, `${rootUrl}`);
@@ -62,7 +62,9 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
       // Fetch included file
       const response = await fetch(includeUrl.href);
       if (!response.ok) {
-        throw new Error(`Failed to load ${includeUrl}: ${response.statusText}`);
+        // throw new Error(`Failed to load ${includeUrl}: ${response.statusText}`);
+        console.error(`Failed to load ${includeUrl}: ${response.statusText}`);
+        continue;
       }
       const includeSource = await response.text();
 
