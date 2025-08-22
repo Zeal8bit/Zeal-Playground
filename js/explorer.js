@@ -84,7 +84,7 @@
     let file;
     let name = path.split('/').slice(-1)[0] || undefined;
     let text = '';
-    if (path.startsWith('user/')) {
+    if (path.match(/^\/?user\//)) {
       // load from local storage
       text = await openLocalFile(path);
     } else {
@@ -115,6 +115,14 @@
   }
   explorer.openFile = openFile;
 
+  function listFiles(path) {
+    const files = Array.from(fileList.querySelectorAll('.file-item')).map((file) => {
+      return file.getAttribute('path');
+    });
+    return files;
+  }
+  explorer.listFiles = listFiles;
+
   function deleteFile(path) {
     let name = path.split('/').slice(1).join('/');
     localStorage.removeItem(`file:${name}`);
@@ -127,6 +135,7 @@
     const { writable = false } = options;
 
     const a = document.createElement('a');
+    a.setAttribute('path', path);
     a.classList.add('file-item');
     const i = document.createElement('icon');
     i.classList.add('fa-solid', 'fa-file-code');
@@ -147,7 +156,7 @@
     return a;
   }
 
-  function addFolder(name, objects, options = {}) {
+  function addFolder(name, path, objects, options = {}) {
     const { files, ...folders } = objects;
     const { writable = false } = options;
 
@@ -174,6 +183,7 @@
     icon.classList.add('fa-solid', 'fa-folder');
     summary.appendChild(icon);
     summary.appendChild(document.createTextNode(name));
+    summary.setAttribute('path', `${path}/`);
     details.appendChild(summary);
     details.addEventListener('toggle', toggleFolder);
 
@@ -182,7 +192,7 @@
     details.appendChild(children);
 
     for (const folder of keySort(folders)) {
-      children.appendChild(addFolder(folder, folders[folder], options));
+      children.appendChild(addFolder(folder, `${path}/${folder}`, folders[folder], options));
     }
 
     if (files?.length) {
@@ -202,7 +212,7 @@
   function renderTree(tree, options = {}) {
     const { insertBefore = false } = options;
     for (let folder of keySort(tree)) {
-      const details = addFolder(folder, tree[folder], options);
+      const details = addFolder(folder, folder, tree[folder], options);
 
       if (insertBefore) {
         fileList.insertBefore(details, fileList.firstChild);

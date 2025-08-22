@@ -1,4 +1,4 @@
-const DEFAULT_CODE = `    .include "headers/zvb.asm"\n\n` + `    ; Write your code here\n`;
+const DEFAULT_CODE = `\t.include "headers/zvb.asm"\n\n` + `\t; Write your code here\n`;
 
 const viewport = document.getElementById('viewport');
 // const container = document.getElementById('top-panel');
@@ -27,19 +27,42 @@ function handleUrlHash() {
   }
 }
 
-window.addEventListener('load', async () => {
+function handleUrlParams() {
   const url = new URL(document.location.href);
   const file = url.searchParams.get('f') || 'examples/hello.asm';
-  await explorer.openFile(file).then((o) => handleUrlHash());
+  explorer.openFile(file).then((o) => handleUrlHash());
+}
+
+window.addEventListener('keydown', (e) => {
+  const save = (e.ctrlKey || e.metaKey) && e.key === 's';
+  if (save) {
+    e.preventDefault();
+    editor.saveFile();
+  }
+});
+
+window.addEventListener('load', async () => {
+  handleUrlParams();
   await explorer.fetchManifest();
 
   document.body.classList.remove('loading');
+  setTimeout(() => editor.editor.focus(), 200);
 });
 
 window.addEventListener('hashchange', handleUrlHash);
 
+window.addEventListener('popstate', (e) => {
+  if (e.state) {
+    editor.openFile(e.state);
+  }
+});
+
 explorer.addEventListener('open-file', (e) => {
-  editor.openFile(e.detail);
+  const o = e.detail;
+  const url = new URL(window.location);
+  url.searchParams.set('f', o.path);
+  window.history.pushState(o, '', url);
+  editor.openFile(o);
 });
 
 explorer.addEventListener('new-file', (e) => {

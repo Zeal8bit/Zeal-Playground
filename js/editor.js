@@ -4,6 +4,7 @@
   const bSaveFile = editorEl.querySelector(':scope > .file-tab .fa-save');
   const bCopyFile = editorEl.querySelector(':scope > .file-tab .fa-copy');
   const textArea = editorEl.querySelector(':scope > [name=content]');
+  let isDirty = false;
 
   editorEl.value = DEFAULT_CODE;
 
@@ -59,19 +60,58 @@
   });
 
   const editor = CodeMirror.fromTextArea(textArea, {
+    // base settings
     mode: 'z80-playground',
     theme: 'solarized dark',
-    lineNumbers: true,
-    foldGutter: true,
+    // indent settings
+    tabSize: 2,
+    indentUnit: 2,
+    indentWithTabs: false,
+
+    // line settings
     styleActiveLine: true,
     lineWrapping: true,
+
+    // gutter settings
+    lineNumbers: true,
+    foldGutter: true,
     gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-    extraKeys: {
-      'Ctrl-Q': (cm) => cm.foldCode(cm.getCursor()),
-    },
     foldOptions: {
       rangeFinder: CodeMirror.helpers.fold['z80-fold'],
     },
+
+    // key bindings
+    extraKeys: {
+      'Ctrl-Q': (cm) => {
+        cm.foldCode(cm.getCursor());
+        return false;
+      },
+      'Cmd-Q': (cm) => {
+        cm.foldCode(cm.getCursor());
+        return false;
+      },
+      'Ctrl-/': (cm) => {
+        const pos = cm.getCursor();
+        cm.toggleComment({ lineComment: ';', blockComment: { start: ';', end: ';' } });
+        cm.setCursor(pos); // keep cursor position
+        return false;
+      },
+      'Cmd-/': (cm) => {
+        const pos = cm.getCursor();
+        cm.toggleComment({ lineComment: ';', blockComment: { start: ';', end: ';' } });
+        cm.setCursor(pos); // keep cursor position
+        return false;
+      },
+    },
+  });
+  editorEl.editor = editor;
+
+  editor.on('change', () => {
+    if (!isDirty) {
+      isDirty = true;
+      fileName.textContent = `* ${editor.fileName}`;
+      fileName.classList.add('info');
+    }
   });
 
   editorEl.gotoLine = (line, opts = {}) => {
@@ -123,12 +163,18 @@
     return false;
   };
 
-  editorEl.editor = editor;
   editorEl.openFile = (o) => {
-    editor.fileName = o.name;
-    fileName.textContent = o.name ?? '* new file';
-    editorEl.fileName = o.name ?? null;
     editor.setValue(o.text);
+    isDirty = false;
+
+    editor.fileName = o.name;
+    editorEl.fileName = o.name ?? null;
+    editor.filePath = o.path;
+    editorEl.filePath = o.path ?? null;
+    fileName.textContent = o.name ?? '* new file';
+    if (o.name) {
+      fileName.classList.remove('info');
+    }
 
     const reUses = /^\s*;\s+@uses\s+(\S+)\s*$/m;
     const mUses = o.text.match(reUses);
@@ -159,7 +205,7 @@
 
   editorEl.getValue = () => editor.getValue();
 
-  bSaveFile.addEventListener('click', () => {
+  function saveFile() {
     let name = editor.fileName?.trim();
     if (!name || name.length < 0) {
       name = prompt('Filename: ', 'user.asm');
@@ -188,6 +234,17 @@
       cancelable: true,
     });
     editorEl.dispatchEvent(e);
+    isDirty = false;
+    editor.fileName = name;
+    editorEl.fileName = name;
+    editorEl.filePath = `user/${editor.fileName}`;
+    fileName.textContent = editor.fileName;
+    fileName.classList.remove('info');
+  }
+  editorEl.saveFile = saveFile;
+
+  bSaveFile.addEventListener('click', () => {
+    saveFile();
   });
   bCopyFile.addEventListener('click', (e) => {
     const text = editor.getValue();

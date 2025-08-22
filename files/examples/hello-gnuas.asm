@@ -3,7 +3,7 @@
   ; This example shows how to write text to the screen
   ; using PRINT_CHAR register and DO_NL bit of CTRL
 
-; .include "zos_sys.asm"
+  .include "zos_sys.asm"
 
 TEXT_CTRL_CTRL                .equ 0xa9
 TEXT_CTRL_PRINT_CHAR          .equ 0xa0
@@ -14,7 +14,7 @@ TEXT_CTRL_CTRL_NEXTLINE       .equ 0
   .global _start
 _start:
   ld hl, message
-_print_loop:
+print_loop:
   ld a, (hl)
   or a
   jr z, print_done

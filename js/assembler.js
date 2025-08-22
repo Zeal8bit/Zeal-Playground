@@ -46,7 +46,17 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
   let match;
   while ((match = includeRegex.exec(rootSource)) !== null) {
     const includePath = match[1];
-    const includeUrl = new URL(`files/headers/gnu-as/${includePath}`, rootUrl);
+
+    const localPath = `user/${includePath}`;
+    const localContents = await explorer.readFile(localPath);
+    if (localContents.text) {
+      if (!visited.has(localPath)) {
+        await parseIncludesFromString(rootUrl, localPath, localContents.text, results, visited);
+      }
+      return results;
+    }
+
+    const includeUrl = new URL(`files/headers/gnu-as/${includePath}`, `${rootUrl}`);
 
     if (!visited.has(includeUrl)) {
       // Fetch included file
@@ -75,21 +85,29 @@ async function assemble() {
   const code = editor.getValue();
   editor.clearErrors();
 
-  const fileName = editor.fileName ?? 'main.asm';
-  // const files = await parseIncludesFromString(
-  //   location.href + '/files/headers', // base path for includes
-  //   fileName, // key for the root file
-  //   code, // the initial contents
-  // );
-  // console.log(files);
+  const includes = await parseIncludesFromString(
+    location.href + '/files/headers', // base path for includes
+    'source', // key for the root file
+    code, // the initial contents
+  ).then((files) => {
+    delete files.source;
+    return files;
+  });
+  console.log(includes);
 
   const hexView = document.getElementById('hex-view');
   hexView.textContent = '';
   const listView = document.getElementById('list-view');
 
+  const fileName = editor.fileName ?? 'main.asm';
+
   const toolchain = new GnuToolchain();
-  const { bin, listing, map, errors } = await toolchain.execute(fileName, code).catch((errors) => {
-    errors.forEach((err) => console.error(err.source, err.message));
+  const { bin, listing, map, errors } = await toolchain.execute(fileName, code, includes).catch((errors) => {
+    if (Array.isArray(errors)) {
+      errors.forEach((err) => console.error(err.source, err.message));
+    } else {
+      console.error(errors);
+    }
 
     return { bin: null, listing: null, map: null, errors };
   });
@@ -98,13 +116,17 @@ async function assemble() {
     console.error('no binary file was produced, check for errors');
     document.getElementById('log').className = 'log error';
     document.getElementById('log').textContent = 'No binary file was produced, check for errors';
-    errors?.forEach((err) => {
-      hexView.textContent += `${err.source}: ${err.message}\n`;
-      if (err.lineNum) {
-        hexView.textContent += `Line: ${err.filename}:${err.lineNum}\n`;
-        editor.gotoLine(err.lineNum - 1, { error: true });
-      }
-    });
+    if (Array.isArray(errors)) {
+      errors?.forEach((err) => {
+        hexView.textContent += `${err.source}: ${err.message}\n`;
+        if (err.lineNum) {
+          hexView.textContent += `Line: ${err.filename}:${err.lineNum}\n`;
+          editor.gotoLine(err.lineNum - 1, { error: true });
+        }
+      });
+    } else {
+      hexView.textContent += errors.message ?? JSON.stringify(errors);
+    }
     return;
   }
 

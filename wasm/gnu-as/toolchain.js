@@ -137,10 +137,31 @@ class GnuToolchain {
       },
     });
 
-    mod.FS.mkdir('/user');
-    mod.FS.writeFile(`/user/${fileName}`, text);
+    mod.FS.mkdir('/src');
+    mod.FS.writeFile(`/src/${fileName}`, text);
 
-    const args = ['-g', `-alh=/user/${fileName}.lst`, '-o', `/user/${fileName}.o`, `/user/${fileName}`];
+    // mkdirs
+    for (const include in this.includes) {
+      const path = include.slice(0, include.lastIndexOf('/'));
+      console.log('mkdir', path);
+      mod.FS.mkdirTree(`/src/${path}`);
+    }
+
+    for (const path in this.includes) {
+      console.log('include', path);
+      mod.FS.writeFile(`/src/${path}`, this.includes[path]);
+    }
+
+    const args = [
+      '-g',
+      '-I/src/user',
+      '-I/src/files/headers',
+      '-I/src/files/headers/gnu-as',
+      `-alh=/src/${fileName}.lst`,
+      '-o',
+      `/src/${fileName}.o`,
+      `/src/${fileName}`,
+    ];
 
     let code = 0;
     try {
@@ -151,9 +172,9 @@ class GnuToolchain {
     if (this.errors.length) throw this.errors;
     if (code != 0) throw [{ source: 'as', message: `exit code ${code}` }];
 
-    const obj = mod.FS.readFile(`/user/${fileName}.o`);
+    const obj = mod.FS.readFile(`/src/${fileName}.o`);
     if (this.verbose) console.log('as', 'obj', obj);
-    const listing = mod.FS.readFile(`/user/${fileName}.lst`, { encoding: 'utf8' });
+    const listing = mod.FS.readFile(`/src/${fileName}.lst`, { encoding: 'utf8' });
     if (this.verbose) console.log('as', 'list', listing);
 
     return { obj, listing };
@@ -188,17 +209,10 @@ class GnuToolchain {
       },
     });
 
-    mod.FS.mkdir('/user');
-    mod.FS.writeFile(`/user/${fileName}.o`, obj);
+    mod.FS.mkdir('/src');
+    mod.FS.writeFile(`/src/${fileName}.o`, obj);
 
-    const args = [
-      '-Ttext',
-      '0x4000',
-      '-o',
-      `/user/${fileName}.elf`,
-      `-Map=/user/${fileName}.map`,
-      `/user/${fileName}.o`,
-    ];
+    const args = ['-Ttext', '0x4000', '-o', `/src/${fileName}.elf`, `-Map=/src/${fileName}.map`, `/src/${fileName}.o`];
     if (this.verbose) {
       args.unshift('-verbose');
     }
@@ -212,9 +226,9 @@ class GnuToolchain {
     if (this.errors.length) throw this.errors;
     if (code != 0) throw [{ source: 'ld', message: `exit code ${code}` }];
 
-    const elf = mod.FS.readFile(`/user/${fileName}.elf`);
+    const elf = mod.FS.readFile(`/src/${fileName}.elf`);
     if (this.verbose) console.log('ld', 'elf', elf);
-    const map = mod.FS.readFile(`/user/${fileName}.map`, { encoding: 'utf8' });
+    const map = mod.FS.readFile(`/src/${fileName}.map`, { encoding: 'utf8' });
     if (this.verbose) console.log('ld', 'map', map);
 
     return { elf, map };
@@ -238,15 +252,15 @@ class GnuToolchain {
       },
     });
 
-    mod.FS.mkdir('/user');
-    mod.FS.writeFile(`/user/${fileName}.elf`, elf);
+    mod.FS.mkdir('/src');
+    mod.FS.writeFile(`/src/${fileName}.elf`, elf);
     const args = [
       '--only-section=.text',
       '--only-section=.data',
       '-O',
       'binary',
-      `/user/${fileName}.elf`,
-      `/user/${fileName}.bin`,
+      `/src/${fileName}.elf`,
+      `/src/${fileName}.bin`,
     ];
     if (this.verbose) {
       args.unshift('--verbose');
@@ -261,7 +275,7 @@ class GnuToolchain {
     if (this.errors.length) throw this.errors;
     if (code != 0) throw [{ source: 'objcopy', message: `exit code ${code}` }];
 
-    const bin = mod.FS.readFile(`/user/${fileName}.bin`);
+    const bin = mod.FS.readFile(`/src/${fileName}.bin`);
     if (this.verbose) console.log('objcopy', 'bin', bin);
     return { bin };
   }
@@ -279,7 +293,8 @@ class GnuToolchain {
    *   - map: Linker map
    *   - bin: Raw binary image
    */
-  async execute(fileName, text) {
+  async execute(fileName, text, includes) {
+    this.includes = includes || {};
     const { obj, listing } = await this.as(fileName, text);
     const { elf, map } = await this.ld(fileName, obj);
     const { bin } = await this.objcopy(fileName, elf);
