@@ -12,7 +12,8 @@ FILES_TO_COPY=(
   "files/headers"
   "imgs"
   "js"
-  "native"
+  "wasm/native"
+  "wasm/gnu-as"
   "index.html"
 )
 
