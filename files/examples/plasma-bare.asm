@@ -1,70 +1,51 @@
-MMU_RAM_PHYS_ADDR .equ 0x80000
+    ; Include the Zeal 8-bit OS headers
+    .include "zvb_hardware_h.asm"
 
-MMU_PAGE_0 .equ 0xF0
-MMU_PAGE_1 .equ 0xF1
-MMU_PAGE_2 .equ 0xF2
-MMU_PAGE_3 .equ 0xF3
+    .equ MMU_RAM_PHYS_ADDR, 0x80000
 
-PAGE0_VIRT_ADDR .equ 0x0000
-PAGE1_VIRT_ADDR .equ 0x4000
-PAGE2_VIRT_ADDR .equ 0x8000
-PAGE3_VIRT_ADDR .equ 0xC000
+    .equ MMU_PAGE_0,        0xF0
+    .equ MMU_PAGE_1,        0xF1
+    .equ MMU_PAGE_2,        0xF2
+    .equ MMU_PAGE_3,        0xF3
 
-VRAM_TEXT  .equ PAGE2_VIRT_ADDR             ; Location of screen chars
-VRAM_COLOR .equ PAGE2_VIRT_ADDR + 0x1000    ; offset from VRAM_TEXT
+    .equ PAGE0_VIRT_ADDR,   0x0000
+    .equ PAGE1_VIRT_ADDR,   0x4000
+    .equ PAGE2_VIRT_ADDR,   0x8000
+    .equ PAGE3_VIRT_ADDR,   0xC000
 
-COLUMNS    .equ 80
-ROWS       .equ 40
-
-; ZVB Constants
-VID_MEM_PHYS_ADDR_START    .equ 0x100000
-; VID_MEM_LAYER0_ADDR        .equ VID_MEM_PHYS_ADDR_START
-; VID_MEM_LAYER1_ADDR        .equ VID_MEM_PHYS_ADDR_START + 0x1000
-
-VID_IO_CTRL_STAT           .equ 0x90
-; IO_CTRL_VID_MODE           .equ VID_IO_CTRL_STAT + 0xc
-; IO_CTRL_STATUS_REG         .equ VID_IO_CTRL_STAT + 0xd
-
-VID_IO_BANKED_ADDR .equ 0xA0
-; BANK_IO_TEXT_NUM   .equ 0 ; Text control module, usable in text mode (640x480 or 320x240)
-; IO_TEXT_PRINT_CHAR .equ VID_IO_BANKED_ADDR + 0x0
-; IO_TEXT_CURS_Y     .equ VID_IO_BANKED_ADDR + 0x1 ; Cursor Y position (in characters count)
-; IO_TEXT_CURS_X     .equ VID_IO_BANKED_ADDR + 0x2 ; Cursor X position (in characters count)
-; IO_TEXT_SCROLL_Y   .equ VID_IO_BANKED_ADDR + 0x3 ; Scroll Y
-; IO_TEXT_SCROLL_X   .equ VID_IO_BANKED_ADDR + 0x4 ; Scroll X
-; IO_TEXT_COLOR      .equ VID_IO_BANKED_ADDR + 0x5 ; Current character color
-IO_TEXT_CURS_TIME  .equ VID_IO_BANKED_ADDR + 0x6 ; Blink time, in frames, for the cursor
-; IO_TEXT_CURS_CHAR  .equ VID_IO_BANKED_ADDR + 0x7 ; Blink time, in frames, for the cursor
-; IO_TEXT_CURS_COLOR .equ VID_IO_BANKED_ADDR + 0x8 ; Blink time, in frames, for the cursor
+    .equ VRAM_TEXT,         PAGE2_VIRT_ADDR             ; Location of screen chars
+    .equ VRAM_COLOR,        PAGE2_VIRT_ADDR + 0x1000    ; offset from VRAM_TEXT
+    .equ COLUMNS,           80
+    .equ ROWS,              40
 
 
-; this should already be aligned to 0x100
-; ALIGN 0x100
-TABLES .equ PAGE3_VIRT_ADDR
-CHARCODE_OFFSET    .equ TABLES + 0x000
-COLORCODE_OFFSET   .equ TABLES + 0x100
-SINECOSINE_OFFSET  .equ TABLES + 0x200
+    .equ TABLES,  PAGE3_VIRT_ADDR
+    .equ CHARCODE_OFFSET,     TABLES + 0x000
+    .equ COLORCODE_OFFSET,    TABLES + 0x100
+    .equ SINECOSINE_OFFSET,   TABLES + 0x200
 
-PTR_SIN .equ TABLES + 0x300
-PTR_COS .equ TABLES + 0x302
+    .equ PTR_SIN, TABLES + 0x300
+    .equ PTR_COS, TABLES + 0x302
 
 
+    .text
 ; first step is to create a table with sine + cosine values
 ; The addition is performed on a proportionate basis
 ; the table is changed on every frame
+    .global _start
 _start:
     ld a, 0
-    out (IO_TEXT_CURS_TIME), a     ; disable cursor
+    out (TEXT_CTRL_CURSOR_BLINK_TIMING), a     ; disable cursor
 
     ; setup SRAM at 0xC000
-    ld a, MMU_RAM_PHYS_ADDR / 16384
+    ld a, MMU_RAM_PHYS_ADDR >> 14
     out (MMU_PAGE_3), a
 
     ; setup stack point
     ld sp, 0xffff
 
     ; map VRAM to 0x8000
-    ld a, VID_MEM_PHYS_ADDR_START / 16384
+    ld a, VID_MEM_PHYS_ADDR_START >> 14
     out (MMU_PAGE_2), a
 
     ld hl, tbl_sin
@@ -231,7 +212,7 @@ next_row:
 
 _end:
 
-    .ALIGN 0x10
+    .ALIGN 4
 charcodes:
     DB 254,249,250,46
     DB 254,249,250,46
@@ -245,7 +226,7 @@ colorcodes:
     DB 0,3,11,15
 
 ;
-    .ALIGN 0x100 ; "sin 256" table is comprised of 512 bytes
+    .ALIGN 8 ; "sin 256" table is comprised of 512 bytes
                     ; with values between 0 and 63
                     ; they are based on frequency by 4 x 90 degrees
                     ; (=2*pi, ie a full circle)
@@ -269,7 +250,7 @@ tbl_sin:
 ;
 
 ;
-    .ALIGN 0x100 ; "cos 256" frequency 6 x 90 degrees (=2,5*pi)
+    .ALIGN 8 ; "cos 256" frequency 6 x 90 degrees (=2,5*pi)
 tbl_cos:
         DB 0,0,1,4,7,11,15,20,25,31,36,42,47,51,55,59
         DB 61,63,63,63,62,60,57,53,49,44,39,33,28,22,17,13

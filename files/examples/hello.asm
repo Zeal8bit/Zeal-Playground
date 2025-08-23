@@ -3,9 +3,13 @@
   ; This example shows how to write text to the screen
   ; using PRINT_CHAR register and DO_NL bit of CTRL
 
-.include "headers/zvb.asm"
+  .include "zos_sys.asm"
+  .include "zvb_hardware_h.asm"
 
-start:
+
+  .text
+  .global _start
+_start:
   ld hl, message
 print_loop:
   ld a, (hl)
@@ -13,7 +17,7 @@ print_loop:
   jr z, print_done
   cp 0x0A   ; newline
   jr nz, print
-  ld a, TEXT_CTRL_CTRL_NEXTLINE
+  ld a, 1 << TEXT_CTRL_CTRL_NEXTLINE
   out (TEXT_CTRL_CTRL), a
   jr print_next
 print:
@@ -27,4 +31,4 @@ print_done:
   ; Place your message here
   ; The message should null-terminated
   ; and can contain \n characters
-message: .cstr "hello\nworld"
+message: .asciz "hello\nworld"

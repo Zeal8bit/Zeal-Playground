@@ -1,48 +1,26 @@
     ; @uses zealos
 
-    ; Include the Zeal 8-bit OS header file, containing all the syscalls macros.
-    .include "headers/zos_sys.asm"
-    .include "headers/zvb.asm"
+    ; Include the Zeal 8-bit OS headers
+    .include "zos_sys.asm"
+    .include "zvb_hardware_h.asm"
 
-    ; Make the code start at 0x4000, as requested by the kernel
-    .ORG 0x4000
+    .equ VRAM_TEXT,   0x8000    ; Location of screen chars
+    ; VRAM_COLOR .equ 0x1000    ; offset from VRAM_TEXT
 
-VRAM_TEXT  .equ 0x8000    ; Location of screen chars
-; VRAM_COLOR .equ 0x1000    ; offset from VRAM_TEXT
+    .equ COLUMNS,     80
+    .equ ROWS,        40
 
-COLUMNS    .equ 80
-ROWS       .equ 40
+    .equ CHARCODE_OFFSET,     0x000
+    .equ COLORCODE_OFFSET,    0x100
+    .equ SINECOSINE_OFFSET,   0x200
 
-; ZVB Constants
-; VID_MEM_PHYS_ADDR_START    .equ 0x100000
-; VID_MEM_LAYER0_ADDR        .equ VID_MEM_PHYS_ADDR_START
-; VID_MEM_LAYER1_ADDR        .equ VID_MEM_PHYS_ADDR_START + 0x1000
+    .equ CMD_CLEAR_SCREEN,  6
 
-VID_IO_CTRL_STAT           .equ 0x90
-; IO_CTRL_VID_MODE           .equ VID_IO_CTRL_STAT + 0xc
-; IO_CTRL_STATUS_REG         .equ VID_IO_CTRL_STAT + 0xd
-
-VID_IO_BANKED_ADDR .equ 0xA0
-; BANK_IO_TEXT_NUM   .equ 0 ; Text control module, usable in text mode (640x480 or 320x240)
-; IO_TEXT_PRINT_CHAR .equ VID_IO_BANKED_ADDR + 0x0
-; IO_TEXT_CURS_Y     .equ VID_IO_BANKED_ADDR + 0x1 ; Cursor Y position (in characters count)
-; IO_TEXT_CURS_X     .equ VID_IO_BANKED_ADDR + 0x2 ; Cursor X position (in characters count)
-; IO_TEXT_SCROLL_Y   .equ VID_IO_BANKED_ADDR + 0x3 ; Scroll Y
-; IO_TEXT_SCROLL_X   .equ VID_IO_BANKED_ADDR + 0x4 ; Scroll X
-; IO_TEXT_COLOR      .equ VID_IO_BANKED_ADDR + 0x5 ; Current character color
-IO_TEXT_CURS_TIME  .equ VID_IO_BANKED_ADDR + 0x6 ; Blink time, in frames, for the cursor
-; IO_TEXT_CURS_CHAR  .equ VID_IO_BANKED_ADDR + 0x7 ; Blink time, in frames, for the cursor
-; IO_TEXT_CURS_COLOR .equ VID_IO_BANKED_ADDR + 0x8 ; Blink time, in frames, for the cursor
-
-CHARCODE_OFFSET    .equ 0x000
-COLORCODE_OFFSET   .equ 0x100
-SINECOSINE_OFFSET  .equ 0x200
-
-CMD_CLEAR_SCREEN .equ 6
-
+    .text
 ; first step is to create a table with sine + cosine values
 ; The addition is performed on a proportionate basis
 ; the table is changed on every frame
+    .global _start
 _start:
     ld h, DEV_STDOUT
     ld c, CMD_CLEAR_SCREEN          ; clear screen
@@ -53,7 +31,7 @@ _start:
     ;
 
     ld a, 0
-    out (IO_TEXT_CURS_TIME), a     ; disable cursor
+    out (TEXT_CTRL_CURSOR_BLINK_TIMING), a     ; disable cursor
 
     ld de, VRAM_TEXT
     ld h, 0x10
@@ -230,7 +208,7 @@ _end:
     EXIT()
 ;
 
-    .ALIGN 0x10
+    .ALIGN 4
 charcodes:
     DB 254,249,250,46
     DB 254,249,250,46
@@ -244,7 +222,7 @@ colorcodes:
     DB 0,3,11,15
 
 ;
-    .ALIGN 0x100 ; "sin 256" table is comprised of 512 bytes
+    .ALIGN 8 ; "sin 256" table is comprised of 512 bytes
                     ; with values between 0 and 63
                     ; they are based on frequency by 4 x 90 degrees
                     ; (=2*pi, ie a full circle)
@@ -268,7 +246,7 @@ tbl_sin:
 ;
 
 ;
-    .ALIGN 0x100 ; "cos 256" frequency 6 x 90 degrees (=2,5*pi)
+    .ALIGN 8 ; "cos 256" frequency 6 x 90 degrees (=2,5*pi)
 tbl_cos:
         DB 0,0,1,4,7,11,15,20,25,31,36,42,47,51,55,59
         DB 61,63,63,63,62,60,57,53,49,44,39,33,28,22,17,13
@@ -289,5 +267,5 @@ tbl_cos:
 ;
 
 ; this should already be aligned to 0x100
-; .ALIGN 0x100
+;    .ALIGN 0x100
 TABLES:
