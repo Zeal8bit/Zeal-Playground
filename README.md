@@ -12,6 +12,6 @@ Zeal Playground uses the new [Zeal Native Emulator](https://github.com/Zeal8bit/
 
 Zeal Playground uses [CodeMirror](https://codemirror.net/) for it's text editor.
 
-## ASM80 Assembler
+## GNU Assembler
 
-Zeal Playground uses [ASM80](https://github.com/asm80/asm80-core) for its assembler.
+Zeal Playground uses GNU AS, LD, OBJCOPY for Z80 for its assembler.
