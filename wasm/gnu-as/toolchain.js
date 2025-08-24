@@ -143,9 +143,11 @@ class GnuToolchain {
     mod.FS.writeFile(`/src/${fileName}`, text);
 
     // mkdirs
+    let includePaths = [];
     for (const include in this.includes) {
       const path = include.slice(0, include.lastIndexOf('/'));
       console.log('mkdir', path);
+      includePaths.push(path);
       mod.FS.mkdirTree(`/src/${path}`);
     }
 
@@ -157,8 +159,8 @@ class GnuToolchain {
     const args = [
       '-g',
       '-I/src/user',
-      '-I/src/files/headers',
-      '-I/src/files/headers/gnu-as',
+      '-I/src/files',
+      ...includePaths.map((path) => `-I/src/${path}`),
       `-alh=/src/${fileName}.lst`,
       '-o',
       `/src/${fileName}.o`,

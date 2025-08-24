@@ -56,11 +56,24 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
       continue;
     }
 
-    const includeUrl = new URL(`files/headers/${includePath}`, `${rootUrl}`);
+    const includeUrl1 = new URL(`files/headers/${includePath}`, `${rootUrl}`);
+    const includeUrl2 = new URL(`files/${includePath}`, `${rootUrl}`);
 
-    if (!visited.has(includeUrl)) {
+    if (!visited.has(includeUrl1) && !visited.has(includeUrl2)) {
       // Fetch included file
-      const response = await fetch(includeUrl.href);
+      let includeUrl = includeUrl1;
+      const response = await fetch(includeUrl.href)
+        .then(async (response) => {
+          if (!response.ok) {
+            includeUrl = includeUrl2;
+            return await fetch(includeUrl.href);
+          }
+          return response;
+        })
+        .catch((e) => {
+          console.error('Exception', e);
+          return { ok: false };
+        });
       if (!response.ok) {
         // throw new Error(`Failed to load ${includeUrl}: ${response.statusText}`);
         console.error(`Failed to load ${includeUrl}: ${response.statusText}`);
@@ -71,7 +84,7 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
       // Recurse using the fetched contents
       await parseIncludesFromString(
         rootUrl, // new URL('./', includeUrl).href, // new base for further includes
-        includeUrl.pathname, // use URL as the key
+        includeUrl.pathname.slice(1), // use URL as the key
         includeSource,
         results,
         visited,
