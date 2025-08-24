@@ -89,6 +89,8 @@
 class GnuToolchain {
   constructor({ log = null, logErr = null, verbose = false } = {}) {
     this.verbose = verbose;
+    this.includes = [];
+    this.org = '0x0000';
     this.errors = [];
     this.defaultModule = {
       print: log ?? this.log('stdout'),
@@ -212,7 +214,15 @@ class GnuToolchain {
     mod.FS.mkdir('/src');
     mod.FS.writeFile(`/src/${fileName}.o`, obj);
 
-    const args = ['-Ttext', '0x4000', '-o', `/src/${fileName}.elf`, `-Map=/src/${fileName}.map`, `/src/${fileName}.o`];
+    const args = [
+      '-Ttext',
+      this.org || '0x0000',
+      '-o',
+      `/src/${fileName}.elf`,
+      `-Map=/src/${fileName}.map`,
+      `/src/${fileName}.o`,
+    ];
+
     if (this.verbose) {
       args.unshift('-verbose');
     }
@@ -293,8 +303,10 @@ class GnuToolchain {
    *   - map: Linker map
    *   - bin: Raw binary image
    */
-  async execute(fileName, text, includes) {
+  async execute(fileName, text, args = {}) {
+    const { includes, org = '0x0000' } = args;
     this.includes = includes || {};
+    this.org = org;
     const { obj, listing } = await this.as(fileName, text);
     const { elf, map } = await this.ld(fileName, obj);
     const { bin } = await this.objcopy(fileName, elf);

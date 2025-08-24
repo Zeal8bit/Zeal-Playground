@@ -102,8 +102,10 @@ async function assemble() {
 
   const fileName = editor.fileName ?? 'main.asm';
 
+  let org = '0x0000';
+  if (emulator.uses == 'zealos') org = '0x4000';
   const toolchain = new GnuToolchain();
-  const { bin, listing, map, errors } = await toolchain.execute(fileName, code, includes).catch((errors) => {
+  const { bin, listing, map, errors } = await toolchain.execute(fileName, code, { includes, org }).catch((errors) => {
     if (Array.isArray(errors)) {
       errors.forEach((err) => console.error(err.source, err.message));
     } else {
