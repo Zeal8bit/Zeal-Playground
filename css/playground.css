@@ -70,18 +70,8 @@ icon {
 }
 
 #viewport {
-    /* display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr; */
-
-    display: grid;
-    grid-template-columns: 30px 180px var(--editor-width, minmax(450px, 1fr)) 5px minmax(320px, 1fr);
-    grid-template-rows: calc(var(--viewport-h) - 250px) 250px;
-    /* gap: 10px; */
     --row-gap: 6px;
     --col-gap: 8px;
-
-    height: var(--viewport-h);
 
     &:has(>#editor.expand)>.resize-column {
         grid-row: 2;
@@ -94,11 +84,36 @@ icon {
     }
 
     #editor.expand {
-        grid-column: span 3;
+        @media (min-width: 1024px) {
+            grid-column: span 3;
+        }
+    }
+
+    @media (max-width: 599px) {
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media (min-width: 600px) {
+        display: grid;
+        grid-template-columns: 30px 180px var(--editor-width, minmax(450px, 1fr));
+    }
+
+    @media (min-width: 1024px) {
+        grid-template-columns: 30px 180px var(--editor-width, minmax(450px, 1fr)) 5px minmax(320px, 1fr);
+        grid-template-rows: calc(var(--viewport-h) - 250px) 250px;
+        height: var(--viewport-h);
     }
 }
 
+
 .resize-column {
+    display: none;
+
+    @media (min-width: 1024px) {
+        display: block;
+    }
+
     background-color: var(--c-0);
     grid-row: span 2;
     cursor: col-resize;
@@ -109,7 +124,12 @@ icon {
 }
 
 #preferences {
-    grid-column: span 2;
+    grid-column: span 3;
+
+    @media (min-width: 1024px) {
+        grid-column: span 2;
+    }
+
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -142,6 +162,12 @@ icon {
 
 #assembler,
 #listing {
+    grid-column: span 3;
+
+    @media (min-width: 1024px) {
+        grid-column: span 1;
+    }
+
     background: var(--c-0);
     padding: 0.5rem;
     font-family: monospace;
