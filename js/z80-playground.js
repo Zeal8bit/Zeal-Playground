@@ -25,7 +25,7 @@
     const variables1 = /^(af?|bc?|c|de?|e|hl?|l|i[xy]?|r|sp)\b/i;
     const variables2 = /^(n?[zc]|p[oe]?|m)\b/i;
     const errors = /^([hl][xy]|i[xy][hl]|slia|sll)\b/i;
-    const numbers = /^([\da-f]+h|[0-7]+o|[01]+b|\d+d?)\b/i;
+    const numbers = /^(0x[0-9a-f]+|0b[01]+|[0-9a-f]+h|[01]+b|\d+d?)\b/i;
 
     return {
       startState: function () {
@@ -65,7 +65,7 @@
             } else if (keywords2.test(w)) {
               state.context = 2;
               return 'keyword';
-            } else if (state.context == 4 && numbers.test(w)) {
+            } else if (numbers.test(w)) {
               return 'number';
             }
 
