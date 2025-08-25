@@ -49,6 +49,12 @@
           w = stream.current();
 
           if (stream.indentation()) {
+            // match UPPER_CASE_MACRO calls
+            if (state.context == 0 && stream.current().match(/^[A-Z][A-Z0-9_]*$/)) {
+              state.context = 1;
+              return 'keyword';
+            }
+
             if ((state.context == 1 || state.context == 4) && variables1.test(w)) {
               state.context = 4;
               return 'variable-2';
