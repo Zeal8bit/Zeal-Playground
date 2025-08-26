@@ -2,6 +2,7 @@
     ; output any string with any given color.
     .include "examples/launcher.asm"
 
+    .text
     ; Check the `launcher.asm` file for more details about the
     ; `main` routine entry state.
 main:

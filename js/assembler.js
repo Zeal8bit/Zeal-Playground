@@ -99,6 +99,8 @@ async function assemble() {
   const code = editor.getValue();
   editor.clearErrors();
 
+  const verbose = document.querySelector('input[name=verbose]');
+
   const includes = await parseIncludesFromString(
     location.href + '/files/headers', // base path for includes
     'source', // key for the root file
@@ -117,7 +119,9 @@ async function assemble() {
 
   let org = '0x0000';
   if (emulator.uses == 'zealos') org = '0x4000';
-  const toolchain = new GnuToolchain();
+  const toolchain = new GnuToolchain({
+    verbose: verbose.checked,
+  });
   const { bin, listing, map, errors } = await toolchain.execute(fileName, code, { includes, org }).catch((errors) => {
     if (Array.isArray(errors)) {
       errors.forEach((err) => console.error(err.source, err.message));

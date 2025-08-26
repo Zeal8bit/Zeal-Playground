@@ -1,3 +1,5 @@
+  ; .include "zeal_computer_h.asm"
+
 ;------------------------------------------------------------
 ; RGB565
 ;
@@ -113,6 +115,49 @@
   .macro SET_CURSOR_XY x, y
       SET_CURSOR_X \x
       SET_CURSOR_Y \y
+  .endm
+
+;------------------------------------------------------------
+; CLEAR_SCREEN
+;
+; Clears both VRAM layers and resets the text I/O controller.
+;
+; Input:
+;   char  = character code to fill Layer 0 VRAM (default 0)
+;   color = attribute value to fill Layer 1 VRAM (default 0x0F)
+;
+; Output:
+;   Layer 0 VRAM filled with 'char'
+;   Layer 1 VRAM filled with 'color'
+;   Text I/O controller reset (cursor=0,0, scroll=0,0)
+;
+; Registers:
+;   Uses AF, BC, HL
+;   Preserves AF (saved/restored)
+;------------------------------------------------------------
+  .macro CLEAR_SCREEN char=0, color=0x0F
+    MMU_GET_PAGE_NUMBER MMU_PAGE1_IO
+    push af ; store mmu_page_back
+
+    MAP_PHYS_ADDR MMU_PAGE1_IO, VID_MEM_LAYER0_ADDR
+    ld hl, VIRT_PAGE1
+    ld bc, VID_640480_TOTAL
+    ld e, \char
+    call memset
+    ld hl, VIRT_PAGE1 + VID_MEM_LAYER1_OFFSET
+    ld e, \color
+    call memset
+    xor a
+
+   ; Map the text I/O controller, which is also 0
+    out (IO_MAPPER_BANK), a
+    out (TEXT_CTRL_CURSOR_Y), a
+    out (TEXT_CTRL_CURSOR_X), a
+    out (TEXT_CTRL_SCROLL_Y), a
+    out (TEXT_CTRL_SCROLL_X), a
+
+    pop af
+    MMU_SET_PAGE_NUMBER MMU_PAGE1_IO
   .endm
 
 ;------------------------------------------------------------

@@ -166,6 +166,9 @@ class GnuToolchain {
       `/src/${fileName}.o`,
       `/src/${fileName}`,
     ];
+    if (this.verbose) {
+      args.unshift('--warn');
+    }
 
     let code = 0;
     try {

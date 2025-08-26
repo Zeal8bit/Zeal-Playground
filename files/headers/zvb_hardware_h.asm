@@ -1,5 +1,6 @@
     ;;;;;;;   Video Modes  ;;;;;;;
 
+    ; Video modes that can be given to IO_CTRL_VID_MODE register
     .equ VID_MODE_TEXT_640,         0
     .equ VID_MODE_TEXT_320,         1
     .equ VID_MODE_BITMAP_256_MODE,  2
@@ -8,6 +9,26 @@
     .equ VID_MODE_GFX_320_8BIT,     5
     .equ VID_MODE_GFX_640_4BIT,     6
     .equ VID_MODE_GFX_320_4BIT,     7
+
+    ; Macros for text-mode
+    .equ VID_640480_WIDTH,   640
+    .equ VID_640480_HEIGHT,  480
+    .equ VID_640480_X_MAX,   80
+    .equ VID_640480_Y_MAX,   40
+    .equ VID_640480_TOTAL,   VID_640480_X_MAX * VID_640480_Y_MAX
+
+    ; Physical address for the I/O components.
+    ; The video mapper is responsible for mapping the I/O component in the I/O bank
+    ; starting at address 0xA0, up to 0xAF (16 registers)
+    ; It also contains the current firmware version of the video board.
+    .equ VID_IO_MAPPER,      0x80
+    .equ IO_MAPPER_REV,      VID_IO_MAPPER + 0x0
+    .equ IO_MAPPER_MIN,      VID_IO_MAPPER + 0x1
+    .equ IO_MAPPER_MAJ,      VID_IO_MAPPER + 0x2
+    ; [0x3;0xD] - Reserved
+    .equ IO_MAPPER_BANK,     VID_IO_MAPPER + 0xE ; I/O device bank, accessible in 0xA0
+    .equ IO_MAPPER_PHYS,     VID_IO_MAPPER + 0xF ; Physical address start of the video chip
+
 
     ;;;;;;; Memory related ;;;;;;;
 

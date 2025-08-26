@@ -20,7 +20,7 @@
 ; first step is to create a table with sine + cosine values
 ; The addition is performed on a proportionate basis
 ; the table is changed on every frame
-    .global _start
+    .globl _start
 _start:
     ld h, DEV_STDOUT
     ld c, CMD_CLEAR_SCREEN          ; clear screen

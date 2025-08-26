@@ -5,12 +5,21 @@
   ; TEXT_CTRL_CTRL_NEXTLINE bit of TEXT_CTRL_CTRL
 
   .include "examples/launcher.asm"
-  .include "zvb_hardware_h.asm"
   .include "zvb_lib_h.asm"
+  .include "zvb_hardware_h.asm"
 
   .text
   .global _start
 main:
+  ; clear screen should remove these
+  ld hl, message1
+  call print_str
+  ld hl, message1
+  call print_str
+
+
+  CLEAR_SCREEN
+
   SET_TEXT_COLOR TEXT_COLOR_RED
   ld hl, message1
   call print_str
@@ -38,23 +47,23 @@ main:
 ;   Destroys A, HL is incremented until null terminator
 ;
 ;------------------------------------------------------------
-  .global print_str
+  .globl print_str
 print_str:
-.loop:
+1:
   ld a, (hl)
   or a
-  jr z, .done
+  jr z, 4f
   cp 0x0A   ; newline
-  jr nz, .print
+  jr nz, 2f
   ld a, 1 << TEXT_CTRL_CTRL_NEXTLINE
   out (TEXT_CTRL_CTRL), a
-  jr .next
-.print:
+  jr 3f
+2:
   out (TEXT_CTRL_PRINT_CHAR), a
-.next:
+3:
   inc hl
-  jr .loop
-.done:
+  jr 1b
+4:
   ret
 
 

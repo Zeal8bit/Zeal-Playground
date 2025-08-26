@@ -2,6 +2,7 @@
     ; dispose them on screen.
     .include "examples/launcher.asm"
 
+    .text
     ; When `main` routine is called, the tilemaps are all reset to 0,
     ; and tile 0 is also all 0s. The Z80 memory is mapped as follows:
     ; 0x0000 - ROM (current code)
@@ -44,7 +45,7 @@ _create_tile:
     ; This routine doesn't alter BC nor DE, it only increments HL
     ; by BC bytes. So after executing it, it HL already points to
     ; the next tile in memory.
-    call vram_memset
+    call memset
     ; Increment to the next color
     inc e
     ; Decrement the iterator and check if it's the end of the loop
