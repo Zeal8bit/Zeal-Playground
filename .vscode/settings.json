@@ -1,6 +1,12 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "workbench.editorAssociations": {
+    "*.ztp": "hexEditor.hexedit",
+    "*.zts": "hexEditor.hexedit",
+    "*.ztm": "hexEditor.hexedit",
+    "*.bin": "hexEditor.hexedit"
+  },
   "[css]": {
     "editor.foldingStrategy": "indentation",
     "editor.detectIndentation": false,

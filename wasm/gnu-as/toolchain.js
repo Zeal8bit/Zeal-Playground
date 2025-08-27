@@ -273,6 +273,7 @@ class GnuToolchain {
     const args = [
       '--only-section=.text',
       '--only-section=.data',
+      '--only-section=.rodata',
       '-O',
       'binary',
       `/src/${fileName}.elf`,

@@ -41,11 +41,12 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
   results[rootName] = rootSource;
 
   // Regex for `.include "something"`
-  const includeRegex = /^\s*\.include\s+"([^"]+)"\s*$/gm;
+  const includeRegex = /^\s*\.(include|incbin)\s+"([^"]+)"\s*$/gm;
 
   let match;
   while ((match = includeRegex.exec(rootSource)) !== null) {
-    const includePath = match[1];
+    const directive = match[1];
+    const includePath = match[2];
 
     const localPath = `user/${includePath}`;
     const localContents = await explorer.readFile(localPath);
@@ -79,16 +80,22 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
         console.error(`Failed to load ${includeUrl}: ${response.statusText}`);
         continue;
       }
-      const includeSource = await response.text();
 
-      // Recurse using the fetched contents
-      await parseIncludesFromString(
-        rootUrl, // new URL('./', includeUrl).href, // new base for further includes
-        includeUrl.pathname.slice(1), // use URL as the key
-        includeSource,
-        results,
-        visited,
-      );
+      if (directive == 'include') {
+        const includeSource = await response.text();
+
+        // Recurse using the fetched contents
+        await parseIncludesFromString(
+          rootUrl, // new URL('./', includeUrl).href, // new base for further includes
+          includeUrl.pathname.slice(1), // use URL as the key
+          includeSource,
+          results,
+          visited,
+        );
+      } else {
+        const buffer = await response.arrayBuffer();
+        results[includeUrl.pathname.slice(1)] = new Uint8Array(buffer);
+      }
     }
   }
 

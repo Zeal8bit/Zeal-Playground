@@ -160,6 +160,11 @@
     MMU_SET_PAGE_NUMBER MMU_PAGE1_IO
   .endm
 
+  .macro SET_VIDEO_MODE mode
+    ld a, \mode
+    out (VIDEO_CONF_VIDEO_MODE), a
+  .endm
+
 ;------------------------------------------------------------
 ; Standard VGA 16-color palette (foreground only, background=0)
 ; Each constant is a single byte, 0x0F format (low nibble = FG, high nibble = BG)
@@ -180,3 +185,34 @@
   TEXT_COLOR TEXT_COLOR_LIGHT_MAGENTA,0xD
   TEXT_COLOR TEXT_COLOR_YELLOW,       0xE
   TEXT_COLOR TEXT_COLOR_WHITE,        0xF
+
+
+;------------------------------------------------------------
+; gfx_sprite structure
+;
+; Layout:
+;   y       (uint16_t) - Y-16 coordinate
+;   x       (uint16_t) - X-16 coordinate
+;   tile    (uint8_t)  - Tile index
+;   flags   (uint8_t)  - Flags (see gfx_sprite_flags)
+;   options (uint16_t) - Extra options (see gfx_sprite_options)
+;------------------------------------------------------------
+  .equ GFX_SPRITE_Y,       0   ; offset 0, 2 bytes
+  .equ GFX_SPRITE_X,       2   ; offset 2, 2 bytes
+  .equ GFX_SPRITE_TILE,    4   ; offset 4, 1 byte
+  .equ GFX_SPRITE_FLAGS,   5   ; offset 5, 1 byte
+  .equ GFX_SPRITE_OPTIONS, 6   ; offset 6, 2 bytes
+  .equ GFX_SPRITE_SIZE,    8   ; total size in bytes
+
+  .data
+wait_for_vblank:
+    in a, (VIDEO_CONF_VIDEO_STATUS)
+    and 2
+    jr z, wait_for_vblank
+    ret
+
+wait_end_vblank:
+    in a, (VIDEO_CONF_VIDEO_STATUS)
+    and 2
+    jr nz, wait_end_vblank
+    ret
