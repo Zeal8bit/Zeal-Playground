@@ -1,11 +1,11 @@
 const DEFAULT_CODE = `\t; Includes a tiny bootloader that sets up memory mapping and clears VRAM` +
-  `\n\t.include "launcher.asm"` +
+  `\n\t.include "examples/launcher.asm"` +
   `\n\n\t; Define your main routine here - the bootloader has already:` +
   `\n\t; - Configured MMU for ROM, VRAM, and RAM access` +
   `\n\t; - Cleared the VRAM (video memory)` +
   `\n\t; - Set stack pointer to 0xffff` +
   `\n\t; Check "launcher.asm" file for more details.` +
-  `\n\tmain:` +
+  `\nmain:` +
   `\n\t\t; Write your code here` +
   `\n\t\tret` +
   `\n`;
