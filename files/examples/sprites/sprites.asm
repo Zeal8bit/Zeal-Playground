@@ -52,6 +52,7 @@ main:
     ld bc, 3200
     ld e, 0
     call memset
+
     ; fill layer0 with the blank tile
     ld hl, VIRT_PAGE1 + VID_MEM_LAYER1_OFFSET
     ld bc, 3200
@@ -69,7 +70,7 @@ create_sprites:
     ldir
     ret
 
-    .section .rodata, "a",@progbits
+    .section .data
 .sprite_head:
     .dw 32 ; Y
     .dw 32 ; X
@@ -85,7 +86,7 @@ create_sprites:
     .dw 0 ; Options
 .sprite_end:
 
-
+    .section .rodata
 chars_zts:
     .incbin "examples/assets/chars.zts"
 chars_zts_end:

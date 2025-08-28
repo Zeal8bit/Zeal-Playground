@@ -18,7 +18,7 @@
     .equ SCREEN_HEIGHT, 240
     .equ SPRITE_SIZE, 16  ; assuming 16x16 sprites
 
-    .text
+    .section .text
     ; When `main` routine is called, the tilemaps are all reset to 0,
     ; and tile 0 is also all 0s. The Z80 memory is mapped as follows:
     ; 0x0000 - ROM (current code)
@@ -67,19 +67,21 @@ main:
     ld e, 0
     call memset
 
-    call create_sprites
+    call draw_sprites
 
     ; Map sprite memory to page1 for sprite display
     MAP_PHYS_ADDR MMU_PAGE1_IO, VID_MEM_SPRITE_ADDR
 
     ; Main game loop
-game_loop:
+.game_loop:
+    call update_sprite
     call wait_for_vblank
-    call update_sprite_position
+    call draw_sprites
     call wait_end_vblank
-    jr game_loop
+    jr .game_loop
+;
 
-create_sprites:
+draw_sprites:
     ; Copy head sprite data
     ld de, SPRITE_HEAD_ADDR
     ld hl, .sprite_head
@@ -92,108 +94,104 @@ create_sprites:
     ld bc, GFX_SPRITE_SIZE
     ldir
     ret
+;
 
-; Update sprite position with simple movement
-update_sprite_position:
-    ; Load current sprite position
-    ld hl, SPRITE_HEAD_ADDR + GFX_SPRITE_Y
+update_sprite:
+.update_y.load:
+    ld hl, .sprite_head + GFX_SPRITE_Y
     ld e, (hl)
     inc hl
-    ld d, (hl)  ; DE = current Y
-    ld hl, SPRITE_HEAD_ADDR + GFX_SPRITE_X
-    ld c, (hl)
-    inc hl
-    ld b, (hl)  ; BC = current X
+    ld d, (hl)
+    dec hl
 
-    ; Simple movement - move right and down slowly
-    ; Add X movement (1 pixel per frame)
-    ld a, c
-    add a, MOVE_SPEED
-    ld c, a
-    jr nc, .no_x_carry
-    inc b
-.no_x_carry:
-
-    ; Add Y movement (1 pixel per frame)
-    ld a, e
-    add a, MOVE_SPEED
-    ld e, a
-    jr nc, .no_y_carry
-    inc d
-.no_y_carry:
-
-    ; Simple boundary checking - wrap around
-    ; Check X boundary
-    ld a, b
-    cp (SCREEN_WIDTH - 16) >> 8
-    jr c, .x_ok
-    ld a, c
-    cp (SCREEN_WIDTH - 16) & 0xFF
-    jr c, .x_ok
-    ld bc, 0  ; Reset to left edge
-.x_ok:
-
-    ; Check Y boundary
-    ld a, d
-    cp (SCREEN_HEIGHT - 32) >> 8  ; Account for body sprite
-    jr c, .y_ok
-    ld a, e
-    cp (SCREEN_HEIGHT - 32) & 0xFF
-    jr c, .y_ok
-    ld de, 0  ; Reset to top edge
-.y_ok:
-
-    ; Update head sprite Y position
-    ld hl, SPRITE_HEAD_ADDR + GFX_SPRITE_Y
-    ld (hl), e
-    inc hl
-    ld (hl), d
-
-    ; Update head sprite X position
-    ld hl, SPRITE_HEAD_ADDR + GFX_SPRITE_X
-    ld (hl), c
-    inc hl
-    ld (hl), b
-
-    ; Update body sprite Y position (16 pixels below head)
-    ld hl, SPRITE_BODY_ADDR + GFX_SPRITE_Y
-    ld a, e
-    add a, 16
+.update_y.add:
+    ld a, (.sprite_y_dir)
+    add a, e
     ld (hl), a
-    inc hl
     ld a, d
     adc a, 0
+    inc hl
     ld (hl), a
 
-    ; Update body sprite X position (same as head)
-    ld hl, SPRITE_BODY_ADDR + GFX_SPRITE_X
-    ld (hl), c
+.update_y.write:
+    ld hl, .sprite_body + GFX_SPRITE_Y
+    ld e, (hl)
     inc hl
-    ld (hl), b
+    ld d, (hl)
+    dec hl
+    ld a, (.sprite_y_dir)
+    add a, e
+    ld (hl), a
+    ld a, d
+    adc a, 0
+    inc hl
+    ld (hl), a
+
+.update_x:
+    ld hl, .sprite_head + GFX_SPRITE_X
+    ld e, (hl)
+    inc hl
+    ld d, (hl)
+    dec hl
+
+.update_x.add:
+    ld a, (.sprite_x_dir)
+    add a, e
+    ld (hl), a
+    ld a, d
+    adc a, 0
+    inc hl
+    ld (hl), a
+
+.update_x.write:
+    ld hl, .sprite_body + GFX_SPRITE_X
+    ld e, (hl)
+    inc hl
+    ld d, (hl)
+    dec hl
+    ld a, (.sprite_x_dir)
+    add a, e
+    ld (hl), a
+    ld a, d
+    adc a, 0
+    inc hl
+    ld (hl), a
 
     ret
+;
 
-    .section .rodata, "a",@progbits
+    .section .data
+
+.sprite_x_dir: .db 1
+.sprite_y_dir: .db 1
+
+    .equ START_X, 16
+    .equ START_Y, 16
+
+    ; Sprite - Head Initial Data
 .sprite_head:
-    .dw 32 ; Y
-    .dw 32 ; X
+    .dw START_Y ; Y
+    .dw START_X ; X
     .db SPRITE_HEAD_IDX ; tile
     .db 0 ; Flags
     .dw 0 ; Options
 
+    ; Sprite - Body Initial Data
 .sprite_body:
-    .dw 48 ; Y
-    .dw 32 ; X
+    .dw START_Y + SPRITE_SIZE ; Y
+    .dw START_X ; X
     .db SPRITE_BODY_IDX ; tile
     .db 0 ; Flags
     .dw 0 ; Options
 .sprite_end:
 
-
+    .section .rodata
+    ; Zeal Tileset
 chars_zts:
     .incbin "examples/assets/chars.zts"
 chars_zts_end:
 
+    ; Zeal Palette
 chars_ztp:
     .incbin "examples/assets/chars.ztp"
 chars_ztp_end:
