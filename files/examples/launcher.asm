@@ -29,7 +29,7 @@
     .include "zeal_computer_h.asm"
 
     ; Put everything in the text section
-    .text
+    .section .text
     .globl _start
 _start:
     ; Map two 16KB RAM pages, starting at 0x8000 (PAGE2)

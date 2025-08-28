@@ -8,7 +8,7 @@
   .include "zvb_lib_h.asm"
   .include "zvb_hardware_h.asm"
 
-  .text
+  .section .text
   .global _start
 main:
   ; clear screen should remove these

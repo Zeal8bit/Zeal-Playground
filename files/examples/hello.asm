@@ -7,7 +7,7 @@
   .include "zvb_hardware_h.asm"
 
 
-  .text
+  .section .text
   .global _start
 _start:
   ld hl, message

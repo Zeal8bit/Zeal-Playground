@@ -28,7 +28,7 @@
     .equ PTR_COS, TABLES + 0x302
 
 
-    .text
+    .section .text
 ; first step is to create a table with sine + cosine values
 ; The addition is performed on a proportionate basis
 ; the table is changed on every frame

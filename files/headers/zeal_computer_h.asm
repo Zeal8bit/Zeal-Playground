@@ -1,5 +1,11 @@
     ; Header defining constants for the Zeal 8-bit Computer
 
+    ; Define usable sections
+    .section .text
+    .section .data
+    .section .rodata
+    .section .bss
+
     .equ CONFIG_CPU_FREQ, 10000000
 
     ; The 64KB address space is divided into 4 pages of 16KB
@@ -56,7 +62,7 @@
     ; Keyboard I/O address (RO)
     .equ KB_DATA_IO, 0xE8
 
-    .data
+    .section .data
 ;------------------------------------------------------------
 ; memset
 ;

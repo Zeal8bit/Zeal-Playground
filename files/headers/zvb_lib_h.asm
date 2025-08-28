@@ -204,7 +204,7 @@
   .equ GFX_SPRITE_OPTIONS, 6   ; offset 6, 2 bytes
   .equ GFX_SPRITE_SIZE,    8   ; total size in bytes
 
-  .data
+  .section .data
 wait_for_vblank:
     in a, (VIDEO_CONF_VIDEO_STATUS)
     and 2

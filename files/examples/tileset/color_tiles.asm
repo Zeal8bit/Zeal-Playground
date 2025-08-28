@@ -2,7 +2,7 @@
     ; dispose them on screen.
     .include "examples/launcher.asm"
 
-    .text
+    .section .text
     ; When `main` routine is called, the tilemaps are all reset to 0,
     ; and tile 0 is also all 0s. The Z80 memory is mapped as follows:
     ; 0x0000 - ROM (current code)
