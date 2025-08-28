@@ -13,25 +13,33 @@ SECTIONS
 {
     /* Reset vector at the very beginning of ROM */
     .reset 0x0000 : {
-        KEEP(*(.reset))  /* Reset vector section */
+        KEEP(*(.reset))         /* Reset vector section */
     } > ROM
 
     /* Code and read-only data go in ROM */
     .text : {
-        KEEP(*(.text._start)) /* Ensure _start is first */
-        *(.text)              /* program code */
+        KEEP(*(.text._start))   /* Ensure _start is first */
+        *(.text)                /* program code */
         *(.text.*)
     } > ROM
 
     .rodata : {
-        *(.rodata)       /* constants, lookup tables */
+        *(.rodata)              /* constants, lookup tables */
         *(.rodata.*)
     } > ROM
 
+    /* Data section: initialized variables */
+    /* Store in ROM but will be copied to RAM at runtime */
     .data : {
-        *(.data)         /* initialized variables */
+        __data_start_ram = .;   /* Start of .data in RAM */
+        __data_start_rom = LOADADDR(.data);
+        *(.data)                /* initialized variables */
         *(.data.*)
-    } > RAM
+        __data_end_ram = .;
+    } > RAM AT > ROM
+
+    /* Calculate size of .data section */
+    __data_size = SIZEOF(.data);
 
     /* Uninitialized data (zero-filled) in RAM1 */
     .bss (NOLOAD) : {

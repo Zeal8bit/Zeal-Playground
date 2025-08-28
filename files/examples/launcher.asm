@@ -41,6 +41,11 @@ _start:
     ; Set the stack pointer to the RAM
     ld sp, 0xffff
 
+    ; Copy .data section from ROM to RAM
+    ; This copies initialized data from ROM (stored in .data section)
+    ; to the RAM location where it will be accessed at runtime
+    call copy_data_section
+
     ; Switch to text mode 640 by default
     ld a, VID_MODE_TEXT_640
     out (VIDEO_CONF_VIDEO_MODE), a
@@ -74,3 +79,39 @@ _start:
 1:
     halt
     jr 1b
+
+;------------------------------------------------------------
+; copy_data_section
+;
+; Copies initialized data from ROM (.data section) to RAM.
+; This is essential for programs that have initialized global
+; variables or data that needs to be writable at runtime.
+;
+; Input:
+;   None (uses linker symbols)
+;
+; Output:
+;   .data section copied to RAM
+;
+; Registers:
+;   Uses A, BC, DE, HL
+;   Destroys A, BC, DE, HL
+;------------------------------------------------------------
+copy_data_section:
+    ; Try to use linker-provided symbols first
+    ; If __data_size symbol exists and is > 0, use it
+    ld bc, __data_size
+    ld a, b
+    or c
+    ret z
+
+    ; Use linker-provided symbols
+    ld hl, __data_start_rom     ; Source: .data section in ROM
+    ld de, __data_start_ram     ; Destination: .data section in RAM
+    ldir                        ; Copy BC bytes
+    ret
+
+; Linker symbols for .data section (optional - provided by linker script)
+.extern __data_start_rom
+.extern __data_start_ram
+.extern __data_size

@@ -277,16 +277,7 @@ class GnuToolchain {
 
     mod.FS.mkdir('/src');
     mod.FS.writeFile(`/src/${fileName}.elf`, elf);
-    const args = [
-      '--only-section=.reset',
-      '--only-section=.text',
-      '--only-section=.rodata',
-      '--only-section=.data',
-      '-O',
-      'binary',
-      `/src/${fileName}.elf`,
-      `/src/${fileName}.bin`,
-    ];
+    const args = ['-O', 'binary', `/src/${fileName}.elf`, `/src/${fileName}.bin`];
     if (this.verbose) {
       args.unshift('--verbose');
     }
