@@ -90,6 +90,9 @@ class GnuToolchain {
   constructor({ log = null, logErr = null, verbose = false } = {}) {
     this.verbose = verbose;
     this.includes = [];
+    this.linker = {
+      script: null,
+    };
     this.org = '0x0000';
     this.errors = [];
     this.defaultModule = {
@@ -218,16 +221,20 @@ class GnuToolchain {
 
     mod.FS.mkdir('/src');
     mod.FS.writeFile(`/src/${fileName}.o`, obj);
+    mod.FS.writeFile('/zeal8bit.ld', this.linker.script);
 
     const args = [
-      '-Ttext',
-      this.org || '0x0000',
-      '-o',
-      `/src/${fileName}.elf`,
-      `-Map=/src/${fileName}.map`,
-      '--print-map-locals',
-      `/src/${fileName}.o`,
+        '-o', `/src/${fileName}.elf`,
+        `-Map=/src/${fileName}.map`,
+        '--print-map-locals',
+        `/src/${fileName}.o`
     ];
+
+    if (this.org == '0x0000') {
+      args.unshift('-T', '/zeal8bit.ld');
+    } else {
+      args.unshift('-Ttext', this.org);
+    }
 
     if (this.verbose) {
       args.unshift('-verbose');
@@ -271,9 +278,10 @@ class GnuToolchain {
     mod.FS.mkdir('/src');
     mod.FS.writeFile(`/src/${fileName}.elf`, elf);
     const args = [
+      '--only-section=.reset',
       '--only-section=.text',
-      '--only-section=.data',
       '--only-section=.rodata',
+      '--only-section=.data',
       '-O',
       'binary',
       `/src/${fileName}.elf`,
@@ -314,6 +322,13 @@ class GnuToolchain {
     const { includes, org = '0x0000' } = args;
     this.includes = includes || {};
     this.org = org;
+
+    const linkerScript = fetch('wasm/gnu-as/zeal8bit.ld')
+      .then((response) => (response.ok ? response.text() : null))
+      .then((script) => {
+        this.linker.script = script;
+      });
+
     const { obj, listing } = await this.as(fileName, text);
     const { elf, map } = await this.ld(fileName, obj);
     const { bin } = await this.objcopy(fileName, elf);

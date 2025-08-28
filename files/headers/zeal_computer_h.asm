@@ -1,6 +1,7 @@
     ; Header defining constants for the Zeal 8-bit Computer
 
     ; Define usable sections
+    .section .reset
     .section .text
     .section .data
     .section .rodata
@@ -62,7 +63,7 @@
     ; Keyboard I/O address (RO)
     .equ KB_DATA_IO, 0xE8
 
-    .section .data
+    .section .text.lib
 ;------------------------------------------------------------
 ; memset
 ;
