@@ -225,6 +225,7 @@ class GnuToolchain {
       '-o',
       `/src/${fileName}.elf`,
       `-Map=/src/${fileName}.map`,
+      '--print-map-locals',
       `/src/${fileName}.o`,
     ];
 

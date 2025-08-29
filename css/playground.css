@@ -137,6 +137,10 @@ icon {
     row-gap: var(--row-gap);
 
     border-top: 2px solid var(--c-border);
+
+    .controls {
+        justify-content: flex-start;
+    }
 }
 
 .side-panel {
@@ -192,8 +196,13 @@ icon {
     width: 100%;
     display: flex;
     column-gap: 1ch;
-    background-color: var(--c-100);
     padding: 5px 10px;
+
+    justify-content: flex-end;
+
+    icon {
+        cursor: pointer;
+    }
 }
 
 .text-right {
