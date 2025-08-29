@@ -3,19 +3,19 @@
     ; sprites that move around the screen automatically
     .include "examples/launcher.asm"
     .include "zvb_lib_h.asm"
-    .include "zos_keyboard.asm"
-    .include "zos_sys.asm"
 
     ; location of sprite data in RAM
     .equ SPRITE_HEAD_ADDR, VIRT_PAGE1 + VID_MEM_SPRITE_OFFSET
     .equ SPRITE_HEAD_IDX, 1
 
-    ; Movement constants
-    .equ MOVE_SPEED,    20    ; Slower movement - 1 pixel per frame
+    ; constants
+    .equ MOVE_SPEED,    2    ; Slower movement - 1 pixel per frame
     .equ SCREEN_WIDTH,  320
     .equ SCREEN_HEIGHT, 240
     .equ SPRITE_WIDTH,  16
     .equ SPRITE_HEIGHT, 32
+    .equ SPRITE_START_X, 16
+    .equ SPRITE_START_Y, 16
 
     .section .text
     ; When `main` routine is called, the tilemaps are all reset to 0,
@@ -68,32 +68,29 @@ main:
 
     call draw_sprites
 
-    ; Map sprite memory to page1 for sprite display
-    MAP_PHYS_ADDR MMU_PAGE1_IO, VID_MEM_SPRITE_ADDR
-
     ; Main game loop
-.game_loop:
+game_loop:
     call update_sprite
     call wait_for_vblank
     call draw_sprites
     call wait_end_vblank
-    jr .game_loop
+    jr game_loop
 ;
 
 draw_sprites:
-    ; Copy head sprite data
+    ; Copy sprite data to sprite attributes table
     ld de, SPRITE_HEAD_ADDR
-    ld hl, .sprite_boy
+    ld hl, sprite_char
     ld bc, GFX_SPRITE_SIZE
     ldir
     ret
 ;
 
 update_sprite:
-.update_y:
+_update_sprite_y:
     ; Load the sprite Y position from RAM
-    ld hl, (.sprite_boy + GFX_SPRITE_Y)
-    ld a, (.sprite_y_dir)
+    ld hl, (sprite_char + GFX_SPRITE_Y)
+    ld a, (sprite_y_dir)
     ld e, a
     rlca
     sbc a, a
@@ -101,30 +98,30 @@ update_sprite:
     ; Y += direction
     add hl, de
     ; Store back
-    ld (.sprite_boy + GFX_SPRITE_Y), hl
+    ld (sprite_char + GFX_SPRITE_Y), hl
     ; Check for the border limit and save the new direction.
     ; If HL is at (screen_height - 32), reverse direction (A register).
     ; Bottom border is (screen_height + 16) since sprites are positioned
     ; relative to top-left corner (16,16).
     ld bc, SCREEN_HEIGHT + 16 - SPRITE_HEIGHT
-    ld a, (.sprite_y_dir)
-    call .check_border
-    ld (.sprite_y_dir), a
-.update_x:
+    ld a, (sprite_y_dir)
+    call check_edge
+    ld (sprite_y_dir), a
+_update_sprite_x:
     ; Do the same thing for the X position
-    ld hl, (.sprite_boy + GFX_SPRITE_X)
-    ld a, (.sprite_x_dir)
+    ld hl, (sprite_char + GFX_SPRITE_X)
+    ld a, (sprite_x_dir)
     ld e, a
     rlca
     sbc a, a
     ld d, a
     add hl, de
-    ld (.sprite_boy + GFX_SPRITE_X), hl
+    ld (sprite_char + GFX_SPRITE_X), hl
     ; Calculate BC similarly, for the right border. The sprite width is 16 here and not 32.
     ld bc, SCREEN_WIDTH + 16 - SPRITE_WIDTH
-    ld a, (.sprite_x_dir)
-    call .check_border
-    ld (.sprite_x_dir), a
+    ld a, (sprite_x_dir)
+    call check_edge
+    ld (sprite_x_dir), a
     ret
 ;
 
@@ -134,48 +131,47 @@ update_sprite:
     ;   A  - Current direction (1 or -1)
     ; Returns:
     ;   A - New direction
-.check_border:
+check_edge:
     ; Save direction in D
     ld d, a
     ; If HL is at the top or left border (16), reverse direction (A register)
     ld a, h
     or h
-    jr nz, .check.not_top_left
+    jr nz, 1f
     ld a, l
     ; We need to check that L is <= 16, so use 17 as a comparator
     cp 17
     ; On carry, HL is smaller or equal to 16, invert the direciton and return it!
-    jr c, .check.return
-.check.not_top_left:
+    jr c, 2f
+1: ; _check_edge__not_top_left:
     ; Check the border given as a parameter
     or a ; clear flags
     sbc hl, bc
     ; If carry flag is set, the sprite hasn't reached the border, return
     ld a, d
     ret c
-.check.return:
+2: ; _check_edge__return:
     ; Swap the direction
     ld a, d
     neg
     ret
+;
 
     .section .data
 
-.sprite_x_dir: .db MOVE_SPEED
-.sprite_y_dir: .db MOVE_SPEED
-
-    .equ START_X, 16
-    .equ START_Y, 16
+sprite_x_dir: .db MOVE_SPEED
+sprite_y_dir: .db MOVE_SPEED*2
 
     ; Sprite - Head and body will be handled together by marking
     ; the sprite size as 16x32.
     ; Initial Data
-.sprite_boy:
-    .dw START_Y ; Y
-    .dw START_X ; X
+sprite_char:
+    .dw SPRITE_START_Y ; Y
+    .dw SPRITE_START_X ; X
     .db SPRITE_HEAD_IDX ; tile
     .db 0 ; Flags
     .dw GFX_SPRITE_OPTIONS_HEIGHT_32 ; Options
+
 
     .section .rodata
     ; Zeal Tileset

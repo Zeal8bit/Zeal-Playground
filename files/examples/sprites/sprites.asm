@@ -1,13 +1,20 @@
     ; Example showing how to use the tileset to create tiles and
     ; dispose them on screen.
+
     .include "examples/launcher.asm"
     .include "zvb_lib_h.asm"
 
     ; location of sprite data in RAM
-    .equ SPRITE_HEAD_ADDR, VIRT_PAGE1 + VID_MEM_SPRITE_OFFSET
-    .equ SPRITE_HEAD_IDX, 1
-    .equ SPRITE_BODY_ADDR, SPRITE_HEAD_ADDR + GFX_SPRITE_SIZE
-    .equ SPRITE_BODY_IDX, 2
+    .equ SPRITES_ADDR, VIRT_PAGE1 + VID_MEM_SPRITE_OFFSET
+    .equ SPRITE_HEAD_IDX, 1 ; first tile is "blank/empty"
+
+    ; constants
+    .equ SCREEN_WIDTH,  320
+    .equ SCREEN_HEIGHT, 240
+    .equ SPRITE_WIDTH,  16
+    .equ SPRITE_HEIGHT, 32
+    .equ SPRITE_START_X, (SCREEN_WIDTH / 2) - (SPRITE_WIDTH / 2) + 16
+    .equ SPRITE_START_Y, (SCREEN_HEIGHT / 2) - (SPRITE_HEIGHT / 2) + 16
 
     .section .text
     ; When `main` routine is called, the tilemaps are all reset to 0,
@@ -59,32 +66,33 @@ main:
     ld e, 0
     call memset
 
-    call create_sprites
+    call draw_sprites
 
     jr $
+;
 
-create_sprites:
-    ld de, SPRITE_HEAD_ADDR
-    ld hl, .sprite_head
-    ld bc, .sprite_end  - .sprite_head
+draw_sprites:
+    ; Copy sprite data to sprite attributes table
+    ld de, SPRITES_ADDR
+    ld hl, sprite_char
+    ld bc, GFX_SPRITE_SIZE
     ldir
     ret
+;
+
 
     .section .data
-.sprite_head:
-    .dw 32 ; Y
-    .dw 32 ; X
+
+    ; Sprite - Head and body will be handled together by marking
+    ; the sprite size as 16x32.
+    ; Initial Data
+sprite_char:
+    .dw SPRITE_START_Y ; Y
+    .dw SPRITE_START_X ; X
     .db SPRITE_HEAD_IDX ; tile
     .db 0 ; Flags
-    .dw 0 ; Options
+    .dw GFX_SPRITE_OPTIONS_HEIGHT_32 ; Options
 
-.sprite_body:
-    .dw 48 ; Y
-    .dw 32 ; X
-    .db SPRITE_BODY_IDX ; tile
-    .db 0 ; Flags
-    .dw 0 ; Options
-.sprite_end:
 
     .section .rodata
 chars_zts:
