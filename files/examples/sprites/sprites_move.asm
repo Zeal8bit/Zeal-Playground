@@ -11,7 +11,7 @@
     .equ SPRITE_HEAD_IDX, 1
 
     ; Movement constants
-    .equ MOVE_SPEED,    1    ; Slower movement - 1 pixel per frame
+    .equ MOVE_SPEED,    20    ; Slower movement - 1 pixel per frame
     .equ SCREEN_WIDTH,  320
     .equ SCREEN_HEIGHT, 240
     .equ SPRITE_WIDTH,  16
@@ -95,9 +95,9 @@ update_sprite:
     ld hl, (.sprite_boy + GFX_SPRITE_Y)
     ld a, (.sprite_y_dir)
     ld e, a
+    rlca
+    sbc a, a
     ld d, a
-    ; If D was 1, it becomes 0, if it was 0xff, it keeps 0xff
-    sra d
     ; Y += direction
     add hl, de
     ; Store back
@@ -107,6 +107,7 @@ update_sprite:
     ; Bottom border is (screen_height + 16) since sprites are positioned
     ; relative to top-left corner (16,16).
     ld bc, SCREEN_HEIGHT + 16 - SPRITE_HEIGHT
+    ld a, (.sprite_y_dir)
     call .check_border
     ld (.sprite_y_dir), a
 .update_x:
@@ -114,12 +115,14 @@ update_sprite:
     ld hl, (.sprite_boy + GFX_SPRITE_X)
     ld a, (.sprite_x_dir)
     ld e, a
+    rlca
+    sbc a, a
     ld d, a
-    sra d
     add hl, de
     ld (.sprite_boy + GFX_SPRITE_X), hl
     ; Calculate BC similarly, for the right border. The sprite width is 16 here and not 32.
     ld bc, SCREEN_WIDTH + 16 - SPRITE_WIDTH
+    ld a, (.sprite_x_dir)
     call .check_border
     ld (.sprite_x_dir), a
     ret
@@ -158,8 +161,8 @@ update_sprite:
 
     .section .data
 
-.sprite_x_dir: .db 1
-.sprite_y_dir: .db 1
+.sprite_x_dir: .db MOVE_SPEED
+.sprite_y_dir: .db MOVE_SPEED
 
     .equ START_X, 16
     .equ START_Y, 16
