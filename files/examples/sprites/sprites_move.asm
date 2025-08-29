@@ -9,14 +9,13 @@
     ; location of sprite data in RAM
     .equ SPRITE_HEAD_ADDR, VIRT_PAGE1 + VID_MEM_SPRITE_OFFSET
     .equ SPRITE_HEAD_IDX, 1
-    .equ SPRITE_BODY_ADDR, SPRITE_HEAD_ADDR + GFX_SPRITE_SIZE
-    .equ SPRITE_BODY_IDX, 2
 
     ; Movement constants
-    .equ MOVE_SPEED, 1    ; Slower movement - 1 pixel per frame
-    .equ SCREEN_WIDTH, 320
+    .equ MOVE_SPEED,    1    ; Slower movement - 1 pixel per frame
+    .equ SCREEN_WIDTH,  320
     .equ SCREEN_HEIGHT, 240
-    .equ SPRITE_SIZE, 16  ; assuming 16x16 sprites
+    .equ SPRITE_WIDTH,  16
+    .equ SPRITE_HEIGHT, 32
 
     .section .text
     ; When `main` routine is called, the tilemaps are all reset to 0,
@@ -84,81 +83,78 @@ main:
 draw_sprites:
     ; Copy head sprite data
     ld de, SPRITE_HEAD_ADDR
-    ld hl, .sprite_head
-    ld bc, GFX_SPRITE_SIZE
-    ldir
-
-    ; Copy body sprite data
-    ld de, SPRITE_BODY_ADDR
-    ld hl, .sprite_body
+    ld hl, .sprite_boy
     ld bc, GFX_SPRITE_SIZE
     ldir
     ret
 ;
 
 update_sprite:
-.update_y.load:
-    ld hl, .sprite_head + GFX_SPRITE_Y
-    ld e, (hl)
-    inc hl
-    ld d, (hl)
-    dec hl
-
-.update_y.add:
+.update_y:
+    ; Load the sprite Y position from RAM
+    ld hl, (.sprite_boy + GFX_SPRITE_Y)
     ld a, (.sprite_y_dir)
-    add a, e
-    ld (hl), a
-    ld a, d
-    adc a, 0
-    inc hl
-    ld (hl), a
-
-.update_y.write:
-    ld hl, .sprite_body + GFX_SPRITE_Y
-    ld e, (hl)
-    inc hl
-    ld d, (hl)
-    dec hl
-    ld a, (.sprite_y_dir)
-    add a, e
-    ld (hl), a
-    ld a, d
-    adc a, 0
-    inc hl
-    ld (hl), a
-
+    ld e, a
+    ld d, a
+    ; If D was 1, it becomes 0, if it was 0xff, it keeps 0xff
+    sra d
+    ; Y += direction
+    add hl, de
+    ; Store back
+    ld (.sprite_boy + GFX_SPRITE_Y), hl
+    ; Check for the border limit and save the new direction.
+    ; If HL is at (screen_height - 32), reverse direction (A register).
+    ; Bottom border is (screen_height + 16) since sprites are positioned
+    ; relative to top-left corner (16,16).
+    ld bc, SCREEN_HEIGHT + 16 - SPRITE_HEIGHT
+    call .check_border
+    ld (.sprite_y_dir), a
 .update_x:
-    ld hl, .sprite_head + GFX_SPRITE_X
-    ld e, (hl)
-    inc hl
-    ld d, (hl)
-    dec hl
-
-.update_x.add:
+    ; Do the same thing for the X position
+    ld hl, (.sprite_boy + GFX_SPRITE_X)
     ld a, (.sprite_x_dir)
-    add a, e
-    ld (hl), a
-    ld a, d
-    adc a, 0
-    inc hl
-    ld (hl), a
-
-.update_x.write:
-    ld hl, .sprite_body + GFX_SPRITE_X
-    ld e, (hl)
-    inc hl
-    ld d, (hl)
-    dec hl
-    ld a, (.sprite_x_dir)
-    add a, e
-    ld (hl), a
-    ld a, d
-    adc a, 0
-    inc hl
-    ld (hl), a
-
+    ld e, a
+    ld d, a
+    sra d
+    add hl, de
+    ld (.sprite_boy + GFX_SPRITE_X), hl
+    ; Calculate BC similarly, for the right border. The sprite width is 16 here and not 32.
+    ld bc, SCREEN_WIDTH + 16 - SPRITE_WIDTH
+    call .check_border
+    ld (.sprite_x_dir), a
     ret
 ;
+
+    ; Parameters:
+    ;   HL - New position of the sprite
+    ;   BC - Border position
+    ;   A  - Current direction (1 or -1)
+    ; Returns:
+    ;   A - New direction
+.check_border:
+    ; Save direction in D
+    ld d, a
+    ; If HL is at the top or left border (16), reverse direction (A register)
+    ld a, h
+    or h
+    jr nz, .check.not_top_left
+    ld a, l
+    ; We need to check that L is <= 16, so use 17 as a comparator
+    cp 17
+    ; On carry, HL is smaller or equal to 16, invert the direciton and return it!
+    jr c, .check.return
+.check.not_top_left:
+    ; Check the border given as a parameter
+    or a ; clear flags
+    sbc hl, bc
+    ; If carry flag is set, the sprite hasn't reached the border, return
+    ld a, d
+    ret c
+.check.return:
+    ; Swap the direction
+    ld a, d
+    neg
+    ret
 
     .section .data
 
@@ -168,22 +164,15 @@ update_sprite:
     .equ START_X, 16
     .equ START_Y, 16
 
-    ; Sprite - Head Initial Data
-.sprite_head:
+    ; Sprite - Head and body will be handled together by marking
+    ; the sprite size as 16x32.
+    ; Initial Data
+.sprite_boy:
     .dw START_Y ; Y
     .dw START_X ; X
     .db SPRITE_HEAD_IDX ; tile
     .db 0 ; Flags
-    .dw 0 ; Options
-
-    ; Sprite - Body Initial Data
-.sprite_body:
-    .dw START_Y + SPRITE_SIZE ; Y
-    .dw START_X ; X
-    .db SPRITE_BODY_IDX ; tile
-    .db 0 ; Flags
-    .dw 0 ; Options
-.sprite_end:
+    .dw GFX_SPRITE_OPTIONS_HEIGHT_32 ; Options
 
     .section .rodata
     ; Zeal Tileset

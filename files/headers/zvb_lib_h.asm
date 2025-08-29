@@ -202,6 +202,7 @@
   .equ GFX_SPRITE_TILE,    4   ; offset 4, 1 byte
   .equ GFX_SPRITE_FLAGS,   5   ; offset 5, 1 byte
   .equ GFX_SPRITE_OPTIONS, 6   ; offset 6, 2 bytes
+    .equ GFX_SPRITE_OPTIONS_HEIGHT_32, 2    ; when set, the sprites are 16x32px high
   .equ GFX_SPRITE_SIZE,    8   ; total size in bytes
 
   .section .text.lib
