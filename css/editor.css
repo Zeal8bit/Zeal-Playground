@@ -77,3 +77,7 @@ button.run { background: var(--theme-amber); color: var(--theme-background); fon
 @media (max-width: 699px) {
     #breakpoint-help { position: absolute; clip-path: inset(50%); }
 }
+
+.debug-sources:not([hidden]) { display: flex; gap: 4px; overflow-x: auto; padding: 3px 6px; background: var(--theme-surface); }
+.debug-sources button { flex: none; border-color: transparent; background: none; }
+.debug-sources button[aria-pressed="true"] { color: var(--theme-amber); border-bottom-color: currentColor; }

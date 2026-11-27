@@ -73,6 +73,7 @@ window.addEventListener('popstate', (e) => {
 
 explorer.addEventListener('open-file', (e) => {
   const o = e.detail;
+  if (editor.previewSource(o.path)) return;
   const url = new URL(window.location);
   url.searchParams.set('f', o.path);
   window.history.pushState(o, '', url);

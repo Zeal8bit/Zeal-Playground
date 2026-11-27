@@ -109,6 +109,7 @@
             <button class="fa-solid fa-copy" title="Copy source" aria-label="Copy source"></button>
             <button class="fa-solid fa-save" title="Save file" aria-label="Save file"></button>
           </div>
+          <nav class="debug-sources" aria-label="Source files in the running program" hidden></nav>
           <textarea name="content"></textarea>
         </section>
         <div class="resize-column" role="separator" aria-label="Editor width" aria-orientation="vertical" tabindex="0"></div>
@@ -122,10 +123,10 @@
               <button data-command="continue" title="Continue" aria-label="Continue">
                 <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#play"></use></svg><span>Continue</span>
               </button>
-              <button data-command="step" title="Step" aria-label="Step">
+              <button data-command="step" title="Step one instruction, including into calls" aria-label="Step">
                 <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step"></use></svg><span>Step</span>
               </button>
-              <button data-command="stepOver" title="Step Over" aria-label="Step Over">
+              <button data-command="stepOver" title="Step over a call and pause when it returns" aria-label="Step Over">
                 <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step-over"></use></svg><span>Step Over</span>
               </button>
               <button data-command="reset" title="Reset" aria-label="Reset">

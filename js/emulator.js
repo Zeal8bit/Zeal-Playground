@@ -110,7 +110,8 @@
     instance = null;
   }
 
-  emulator.reload = ({ bin, fileName, withOS, sourceLines, generation }) => {
+  emulator.reload = (build) => {
+    const { bin, fileName, withOS, generation } = build;
     const startPaused = document.querySelector('[name=start_paused]').checked;
     const basename = fileName.split('/').pop().replace(/\.[^.]*$/, '');
     return transition(async () => {
@@ -120,6 +121,7 @@
       instance = new ZealNative({
         canvas,
         debugger: true,
+        previewOnPause: true,
         imageStorage: 'memory',
         storageNamespace,
         romdisk: withOS ? 'wasm/native/zealos.img' : bin,
@@ -135,11 +137,14 @@
         printErr: log('error'),
       });
       await instance.start();
-      if (editor.editor.isClean(generation)) editor.setExecutionLines(sourceLines);
+      if (editor.entryDoc.isClean(generation)) editor.setExecutionLines(build);
       binding = { session: instance.debugger, installed: new Set(), pending: Promise.resolve() };
-      inspector.attach(instance.debugger);
-      await syncBreakpoints();
-      if (!startPaused) await instance.debugger.continue();
+      try {
+        await syncBreakpoints();
+        if (!startPaused) await instance.debugger.continue();
+      } finally {
+        inspector.attach(instance.debugger);
+      }
     });
   };
 

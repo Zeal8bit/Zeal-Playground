@@ -11,6 +11,7 @@ function createDebuggerInspector(panel) {
   const memoryValues = panel.querySelector('#memory-values');
   const error = panel.querySelector('#debug-error');
   let session = null;
+  let previousState;
   let commandPending = false;
   let address = 0;
   let timer;
@@ -57,8 +58,14 @@ function createDebuggerInspector(panel) {
     const state = session?.state;
     panel.hidden = toolbar.hidden = !state;
     if (!state) return;
-    if (state.paused) editor.showExecutionAt(state.registers.pc, true);
-    status.textContent = state.reason === 'breakpoint' ? 'Paused at breakpoint' : state.paused ? 'Paused' : 'Running';
+    if (state !== previousState) {
+      let text = state.reason === 'breakpoint' ? 'Paused at breakpoint' : state.paused ? 'Paused' : 'Running';
+      if (state.paused && !editor.showExecutionAt(state.registers.pc, true)) {
+        text += ' · No source line for $' + hex(state.registers.pc);
+      }
+      status.textContent = text;
+      previousState = state;
+    }
     for (const button of buttons) {
       const command = button.dataset.command;
       button.hidden = command === (state.paused ? 'pause' : 'continue');
