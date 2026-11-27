@@ -57,17 +57,20 @@ function createDebuggerInspector(panel) {
     const state = session?.state;
     panel.hidden = toolbar.hidden = !state;
     if (!state) return;
-    status.textContent = state.paused ? 'Paused' : 'Running';
+    if (state.paused) editor.showExecutionAt(state.registers.pc, true);
+    status.textContent = state.reason === 'breakpoint' ? 'Paused at breakpoint' : state.paused ? 'Paused' : 'Running';
     for (const button of buttons) {
       const command = button.dataset.command;
       button.hidden = command === (state.paused ? 'pause' : 'continue');
       button.disabled = commandPending || (!state.paused && ['step', 'stepOver'].includes(command));
     }
-    if (commandPending || !panel.open || document.hidden) return;
-    const memory = activeTab.id === 'memory-tab';
+    if (commandPending || document.hidden) return;
+    if (!panel.open && (state.paused || !editor.hasExecutionLines())) return;
+    const memory = panel.open && activeTab.id === 'memory-tab';
     session.sample(address, memory ? Math.min(64, 0x10000 - address) : 0).then(sample => {
       if (request !== revision) return;
-      display(sample);
+      if (!state.paused) editor.showExecutionAt(sample.registers.pc);
+      if (panel.open) display(sample);
       if (!state.paused) timer = setTimeout(refresh, 750);
     }).catch(cause => {
       if (request === revision) error.textContent = cause.message;

@@ -113,10 +113,10 @@ runStop.addEventListener('click', async () => {
     if (emulator.running) {
       if (await emulator.stop()) editor.classList.add('expand');
     } else {
-      const bytes = await assemble();
-      if (!bytes) return;
+      const build = await assemble();
+      if (!build) return;
       editor.classList.remove('expand');
-      await emulator.reload(new Uint8Array(bytes));
+      await emulator.reload(build);
     }
   } finally {
     updateRunStop();
@@ -125,8 +125,9 @@ runStop.addEventListener('click', async () => {
 });
 
 async function download_binary() {
-  const bytes = await assemble();
-  const data = new Uint8Array(bytes);
+  const build = await assemble();
+  if (!build) return;
+  const data = build.bin;
   const blob = new Blob([data], { type: 'application/octen-stream' });
   const url = URL.createObjectURL(blob);
 

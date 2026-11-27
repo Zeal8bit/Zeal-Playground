@@ -107,7 +107,81 @@
   editorEl.editor = editor;
   document.fonts.load('16px "BigBlue Terminal 437TT"').then(() => editor.refresh());
 
+  let executionLines = null;
+  const breakpointLines = new Set();
+  let installedAddresses = new Set();
+
+  // A label on its own line shares the following instruction's address.
+  // Stop at directives and unmapped code instead of guessing an address.
+  function breakpointAddress(handle, addressesByLine) {
+    let line = editor.getLineNumber(handle);
+    if (line === null) return;
+    while (line < editor.lineCount()) {
+      if (addressesByLine.has(line)) return addressesByLine.get(line);
+      const text = editor.getLine(line).split(';', 1)[0].trim();
+      if (text && !/^[\w.$]+:$/.test(text)) return;
+      line++;
+    }
+  }
+
+  editorEl.breakpointAddresses = () => {
+    const addressesByLine = new Map();
+    for (const [address, line] of executionLines ?? []) {
+      if (!addressesByLine.has(line)) addressesByLine.set(line, address);
+    }
+    const addresses = new Set();
+    for (const handle of breakpointLines) {
+      if (editor.getLineNumber(handle) === null) {
+        breakpointLines.delete(handle);
+        continue;
+      }
+      const address = breakpointAddress(handle, addressesByLine);
+      if (address !== undefined) addresses.add(address);
+      if (installedAddresses.has(address)) editor.addLineClass(handle, 'gutter', 'breakpoint-bound');
+      else editor.removeLineClass(handle, 'gutter', 'breakpoint-bound');
+    }
+    return addresses;
+  };
+  editorEl.reflectBreakpoints = (addresses) => {
+    installedAddresses = addresses;
+    editorEl.breakpointAddresses();
+  };
+
+  function toggleBreakpoint(line) {
+    const handle = editor.getLineHandle(line);
+    if (breakpointLines.delete(handle)) {
+      editor.removeLineClass(handle, 'gutter', 'source-breakpoint');
+      editor.removeLineClass(handle, 'gutter', 'breakpoint-bound');
+    } else {
+      if (!editor.getLine(line).split(';', 1)[0].trim()) return;
+      breakpointLines.add(handle);
+      editor.addLineClass(handle, 'gutter', 'source-breakpoint');
+    }
+    editorEl.dispatchEvent(new Event('breakpoints-changed'));
+  }
+  editor.on('gutterClick', (cm, line, gutter) => {
+    if (gutter === 'CodeMirror-linenumbers') toggleBreakpoint(line);
+  });
+  editor.addKeyMap({ F9: () => toggleBreakpoint(editor.getCursor().line) });
+
+  let markedLine = null;
+  editorEl.showExecutionAt = (pc, follow = false) => {
+    const line = executionLines?.get(pc) ?? null;
+    if (line !== (markedLine && editor.getLineNumber(markedLine))) {
+      if (markedLine !== null) editor.removeLineClass(markedLine, 'background', 'execution-line');
+      markedLine = line === null ? null : editor.addLineClass(line, 'background', 'execution-line');
+    }
+    if (follow && line !== null) editor.scrollIntoView({ line, ch: 0 }, 32);
+  };
+  editorEl.hasExecutionLines = () => Boolean(executionLines?.size);
+  editorEl.setExecutionLines = (lines) => {
+    executionLines = lines;
+    editorEl.showExecutionAt(null);
+  };
   editor.on('change', () => {
+    const hadMap = executionLines !== null;
+    editorEl.setExecutionLines(null);
+    if (hadMap) editorEl.dispatchEvent(new Event('breakpoints-changed'));
     if (!isDirty) {
       isDirty = true;
       fileName.textContent = `* ${editor.fileName}`;
@@ -165,6 +239,11 @@
   };
 
   editorEl.openFile = (o) => {
+    for (const handle of breakpointLines) {
+      editor.removeLineClass(handle, 'gutter', 'source-breakpoint');
+      editor.removeLineClass(handle, 'gutter', 'breakpoint-bound');
+    }
+    breakpointLines.clear();
     editor.setValue(o.text);
     isDirty = false;
 

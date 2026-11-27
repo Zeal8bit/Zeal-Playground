@@ -102,8 +102,50 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
   return results;
 }
 
+// Read the line records from the final ELF32-Z80 image, after section relocation.
+function linkedSourceLines(elf, fileName) {
+  const data = new DataView(elf.buffer, elf.byteOffset, elf.byteLength);
+  const sectionTable = data.getUint32(32, true);
+  const entrySize = data.getUint16(46, true);
+  const sectionCount = data.getUint16(48, true);
+  function section(index) {
+    const header = sectionTable + index * entrySize;
+    const start = data.getUint32(header + 16, true);
+    return elf.subarray(start, start + data.getUint32(header + 20, true));
+  }
+  const decoder = new TextDecoder();
+  function stringAt(table, offset) {
+    return decoder.decode(table.subarray(offset, table.indexOf(0, offset)));
+  }
+
+  const sectionNames = section(data.getUint16(50, true));
+  let records, names;
+  for (let i = 0; i < sectionCount; i++) {
+    const name = stringAt(sectionNames, data.getUint32(sectionTable + i * entrySize, true));
+    if (name === '.stab') records = section(i);
+    if (name === '.stabstr') names = section(i);
+  }
+  const lines = new Map();
+  if (!records || !names) return lines;
+  const stabs = new DataView(records.buffer, records.byteOffset, records.byteLength);
+  let inEditorFile = false;
+  for (let i = 0; i + 12 <= records.length; i += 12) {
+    const type = stabs.getUint8(i + 4);
+    if (type === 0x64 || type === 0x84) { // N_SO / N_SOL: source file or include
+      inEditorFile = stringAt(names, stabs.getUint32(i, true)) === '/src/' + fileName;
+    } else if (type === 0x44 && inEditorFile) { // N_SLINE: line number and linked instruction address
+      const line = stabs.getUint16(i + 6, true);
+      if (line) lines.set(stabs.getUint32(i + 8, true), line - 1);
+    }
+  }
+  return lines;
+}
+
 async function assemble() {
   const code = editor.getValue();
+  const generation = editor.editor.changeGeneration();
+  const fileName = editor.fileName ?? 'main.asm';
+  const withOS = emulator.uses === 'zealos';
   editor.clearErrors();
 
   const verbose = document.querySelector('input[name=verbose]');
@@ -122,14 +164,11 @@ async function assemble() {
   hexView.textContent = '';
   const listView = document.getElementById('list-view');
 
-  const fileName = editor.fileName ?? 'main.asm';
-
-  let org = '0x0000';
-  if (emulator.uses == 'zealos') org = '0x4000';
+  const org = withOS ? '0x4000' : '0x0000';
   const toolchain = new GnuToolchain({
     verbose: verbose.checked,
   });
-  const { bin, listing, map, errors } = await toolchain.execute(fileName, code, { includes, org }).catch((errors) => {
+  const { bin, listing, map, elf, errors } = await toolchain.execute(fileName, code, { includes, org }).catch((errors) => {
     if (Array.isArray(errors)) {
       errors.forEach((err) => console.error(err.source, err.message));
     } else {
@@ -176,5 +215,5 @@ async function assemble() {
   hexView.textContent = hex;
   listView.textContent = listing + `\n\n\nGLD MAP /user/${fileName}\n` + map;
 
-  return bin;
+  return { bin, sourceLines: linkedSourceLines(elf, fileName), generation, fileName, withOS };
 }

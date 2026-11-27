@@ -55,3 +55,25 @@ button.run { background: var(--theme-amber); color: var(--theme-background); fon
     text-shadow: none;
     font-family: inherit;
 }
+
+.cm-s-zeal .CodeMirror-linebackground.execution-line {
+    background: var(--theme-pc);
+    box-shadow: inset 3px 0 var(--theme-green);
+}
+
+.CodeMirror-linenumber { cursor: pointer; }
+.cm-s-zeal .source-breakpoint {
+    border-left: 4px solid var(--theme-break);
+    background: var(--theme-break-row);
+}
+.cm-s-zeal .source-breakpoint.breakpoint-bound {
+    background: var(--theme-break);
+}
+.cm-s-zeal .breakpoint-bound + .CodeMirror-gutter-wrapper .CodeMirror-linenumber {
+    color: var(--theme-background);
+}
+
+#breakpoint-help { font-size: 12px; }
+@media (max-width: 699px) {
+    #breakpoint-help { position: absolute; clip-path: inset(50%); }
+}

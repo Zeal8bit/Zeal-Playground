@@ -86,6 +86,7 @@
       <div id="preferences" popover>
         <label>Theme <select id="theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
         <label><input type="checkbox" name="enable_zealos" /> Enable Zeal OS</label>
+        <label><input type="checkbox" name="start_paused" /> Start paused</label>
         <label><input type="checkbox" name="verbose" /> Verbose</label>
         <button onclick="prefs_reset_layout()">Reset Layout</button>
       </div>
@@ -101,9 +102,10 @@
       </details>
 
       <div id="workspace">
-        <section id="editor" class="expand" aria-label="Code editor">
+        <section id="editor" class="expand" aria-label="Code editor" aria-describedby="breakpoint-help">
           <div class="file-tab">
             <span class="filename">main.asm</span>
+            <small id="breakpoint-help">Click a line number to toggle a breakpoint</small>
             <button class="fa-solid fa-copy" title="Copy source" aria-label="Copy source"></button>
             <button class="fa-solid fa-save" title="Save file" aria-label="Save file"></button>
           </div>

@@ -61,15 +61,58 @@
     uses = e.target.checked ? 'zealos' : '';
   });
 
+  // Keep native breakpoint changes ordered, including clicks made while an
+  // earlier request is waiting for the emulator's next frame.
+  let binding = null;
+  function syncBreakpoints() {
+    const owner = binding;
+    if (!owner) return Promise.resolve();
+    owner.pending = owner.pending.catch(() => {}).then(async () => {
+      if (binding !== owner) return;
+      const wanted = editor.breakpointAddresses();
+      try {
+        for (const address of owner.installed) {
+          if (!wanted.has(address)) {
+            await owner.session.removeBreakpoint(address);
+            owner.installed.delete(address);
+          }
+        }
+        for (const address of wanted) {
+          if (!owner.installed.has(address)) {
+            await owner.session.setBreakpoint(address);
+            owner.installed.add(address);
+          }
+        }
+      } finally {
+        if (binding === owner) editor.reflectBreakpoints(owner.installed);
+      }
+    });
+    return owner.pending;
+  }
+  editor.addEventListener('breakpoints-changed', () => {
+    syncBreakpoints().catch(error => {
+      runtimeOutput.open = true;
+      log('error')(error.message);
+    });
+  });
+  function unbindBreakpoints() {
+    binding = null;
+    editor.reflectBreakpoints(new Set());
+  }
+
   async function stopInstance() {
+    const pending = binding?.pending;
+    unbindBreakpoints();
+    await pending?.catch(() => {});
+    editor.setExecutionLines(null);
     inspector.attach(null);
     if (instance) await instance.exit();
     instance = null;
   }
 
-  emulator.reload = (data) => {
-    const withOS = uses === 'zealos';
-    const basename = (editor.fileName || 'main.asm').split('/').pop().replace(/\.[^.]*$/, '');
+  emulator.reload = ({ bin, fileName, withOS, sourceLines, generation }) => {
+    const startPaused = document.querySelector('[name=start_paused]').checked;
+    const basename = fileName.split('/').pop().replace(/\.[^.]*$/, '');
     return transition(async () => {
       await stopInstance();
       output.replaceChildren();
@@ -79,10 +122,12 @@
         debugger: true,
         imageStorage: 'memory',
         storageNamespace,
-        romdisk: withOS ? 'wasm/native/zealos.img' : data,
-        userProgram: withOS ? data : null,
+        romdisk: withOS ? 'wasm/native/zealos.img' : bin,
+        userProgram: withOS ? bin : null,
         userProgramPath: `/roms/${basename}.bin`,
         onExit() {
+          unbindBreakpoints();
+          editor.setExecutionLines(null);
           inspector.attach(null);
           emulator.dispatchEvent(new Event('session-ended'));
         },
@@ -90,8 +135,11 @@
         printErr: log('error'),
       });
       await instance.start();
-      await instance.debugger.continue();
+      if (editor.editor.isClean(generation)) editor.setExecutionLines(sourceLines);
+      binding = { session: instance.debugger, installed: new Set(), pending: Promise.resolve() };
       inspector.attach(instance.debugger);
+      await syncBreakpoints();
+      if (!startPaused) await instance.debugger.continue();
     });
   };
 
