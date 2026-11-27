@@ -12,21 +12,22 @@
     },
   });
 
-  const controls = emulator.querySelector('.controls');
   const output = emulator.querySelector('.output');
+  const inspector = createDebuggerInspector(document.getElementById('debugger'));
+  const runtimeOutput = document.getElementById('runtime-output');
   const canvas = emulator.querySelector('canvas');
 
   const enableZealOS = document.querySelector('input[name=enable_zealos]');
 
   let instance = null;
+  Object.defineProperty(emulator, 'running', { get: () => Boolean(instance?.module) });
   let operation = Promise.resolve();
   // Each tab runs disposable images independently.
   const storageNamespace = crypto.randomUUID?.();
 
   function transition(action) {
     operation = operation.then(action).then(() => true).catch(error => {
-      controls.classList.remove('hidden');
-      output.classList.remove('hidden');
+      runtimeOutput.open = true;
       log('error')(error.message);
       return false;
     });
@@ -45,23 +46,6 @@
     emulator.scrollTop += e.deltaY;
   });
 
-  const bToggleFPS = emulator.querySelector('.toggle-fps');
-  function setToggleFPS(show_fps) {
-    if (show_fps) {
-      bToggleFPS.textContent = 'Hide FPS';
-    } else {
-      bToggleFPS.textContent = 'Show FPS';
-    }
-  }
-
-  bToggleFPS?.addEventListener('click', () => {
-    if (instance?.runtimeReady && instance.toggleFps()) {
-      const show_fps = Boolean(instance.module.getValue(instance.module._show_fps, 'i8'));
-      setToggleFPS(show_fps);
-      localStorage.setItem('show_fps', show_fps ? 1 : 0);
-    }
-  });
-
   function log(prefix = '') {
     return (text, ...args) => {
       console.log(prefix, text, ...args);
@@ -78,9 +62,9 @@
   });
 
   async function stopInstance() {
+    inspector.attach(null);
     if (instance) await instance.exit();
     instance = null;
-    controls.classList.add('hidden');
   }
 
   emulator.reload = (data) => {
@@ -89,27 +73,27 @@
     return transition(async () => {
       await stopInstance();
       output.replaceChildren();
-      output.classList.remove('hidden');
+      runtimeOutput.open = false;
       instance = new ZealNative({
         canvas,
+        debugger: true,
         imageStorage: 'memory',
         storageNamespace,
         romdisk: withOS ? 'wasm/native/zealos.img' : data,
         userProgram: withOS ? data : null,
         userProgramPath: `/roms/${basename}.bin`,
+        onExit() {
+          inspector.attach(null);
+          emulator.dispatchEvent(new Event('session-ended'));
+        },
         print: log('info'),
         printErr: log('error'),
       });
-      const mod = await instance.start();
-      const showFPS = localStorage.getItem('show_fps') === '1';
-      mod.setValue(mod._show_fps, Number(showFPS), 'i8');
-      setToggleFPS(showFPS);
-      controls.classList.remove('hidden');
+      await instance.start();
+      await instance.debugger.continue();
+      inspector.attach(instance.debugger);
     });
   };
 
-  emulator.stop = () => transition(async () => {
-    await stopInstance();
-    output.classList.add('hidden');
-  });
+  emulator.stop = () => transition(stopInstance);
 })();

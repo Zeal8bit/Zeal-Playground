@@ -1,7 +1,37 @@
-#emulator { grid-area: emulator; min-width: 0; min-height: 0; overflow: auto; background: var(--theme-background); }
+#emulator { container-type: inline-size; grid-area: emulator; min-width: 0; min-height: 0; overflow: auto; background: var(--theme-background); }
 .preview-heading { justify-content: space-between; min-height: 45px; }
 #canvas-container { padding: 12px; }
 #canvas { display: block; width: 100%; max-width: 640px; height: auto; margin-inline: auto; aspect-ratio: 4/3; background: var(--theme-screen); image-rendering: pixelated; }
 #emulator .output { padding: 4px 12px 12px; font: 16px/1.3 var(--theme-font); overflow-wrap: anywhere; }
 .error { color: var(--theme-break); }
 .warn { color: var(--theme-amber); }
+
+#emulator details { border-top: 1px solid var(--theme-border); }
+#emulator summary { padding: 9px 12px; cursor: pointer; font-weight: 600; background: var(--theme-surface); }
+#cpu-state { margin-left: 8px; font-size: 13px; color: var(--theme-cyan); }
+.debug-controls:not([hidden]), #memory-location { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#memory-location { margin: 8px 12px; }
+.debug-controls button:disabled { color: var(--theme-inactive); cursor: default; }
+#memory-address { font: 14px var(--theme-font); color: var(--theme-text); background: var(--theme-background); border: 1px solid var(--theme-border); padding: 4px; }
+#cpu-registers:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(3, auto 1fr);
+    gap: 4px 8px;
+    margin: 10px 12px;
+    font: 14px/1.25 var(--theme-font);
+}
+#cpu-registers dt { color: var(--theme-cyan); }
+#cpu-registers dd { margin: 0; }
+#debugger pre, #runtime-output .output { max-height: 12rem; overflow: auto; }
+#debugger pre { margin: 8px 12px; font: 14px/1.4 var(--theme-font); }
+#debug-error:not(:empty) { padding: 6px 12px; color: var(--theme-break); }
+
+.debug-controls button:not([hidden]) { display: inline-flex; align-items: center; gap: 3px; padding: 4px 6px; }
+.debug-controls svg { width: 18px; height: 18px; fill: currentColor; }
+.debug-controls :is([data-command="continue"], [data-command="pause"]) svg { color: var(--theme-green); }
+@container (max-width: 27rem) {
+    .debug-controls button span { display: none; }
+}
+.inspect-tabs { display: flex; gap: 4px; padding: 2px 4px; background: var(--theme-raised); border-block-end: 1px solid var(--theme-border); }
+.inspect-tabs button { background: none; border-color: transparent; padding: 5px 8px; text-transform: uppercase; }
+.inspect-tabs button[aria-selected="true"] { color: var(--theme-amber); border-block-end-color: currentColor; }

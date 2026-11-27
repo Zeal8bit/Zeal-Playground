@@ -98,20 +98,31 @@ themeSelect.addEventListener('change', () => {
   localStorage.setItem('playground-theme', themeSelect.value);
 });
 
-let runRequest = 0;
+const runStop = document.getElementById('run-stop');
 
-async function code_run() {
-  const request = ++runRequest;
-  const bytes = await assemble();
-  if (!bytes || request !== runRequest) return;
-  editor.classList.remove('expand');
-  await emulator.reload(new Uint8Array(bytes));
+function updateRunStop() {
+  const running = emulator.running;
+  runStop.querySelector('span').textContent = running ? 'Stop' : 'Run';
+  runStop.querySelector('i').className = running ? 'fa-solid fa-stop' : 'fa-solid fa-play';
 }
 
-async function code_stop() {
-  const request = ++runRequest;
-  if (await emulator.stop() && request === runRequest) editor.classList.add('expand');
-}
+emulator.addEventListener('session-ended', updateRunStop);
+runStop.addEventListener('click', async () => {
+  runStop.disabled = true;
+  try {
+    if (emulator.running) {
+      if (await emulator.stop()) editor.classList.add('expand');
+    } else {
+      const bytes = await assemble();
+      if (!bytes) return;
+      editor.classList.remove('expand');
+      await emulator.reload(new Uint8Array(bytes));
+    }
+  } finally {
+    updateRunStop();
+    runStop.disabled = false;
+  }
+});
 
 async function download_binary() {
   const bytes = await assemble();

@@ -80,7 +80,7 @@
       <div class="actions">
         <button onclick="download_binary()"><i class="fa-solid fa-download"></i> Download</button>
         <button onclick="assemble()"><i class="fa-solid fa-code"></i> Assemble</button>
-        <button class="run" onclick="code_run()"><i class="fa-solid fa-play"></i> Run</button>
+        <button class="run" id="run-stop"><i class="fa-solid fa-play" aria-hidden="true"></i> <span>Run</span></button>
       </div>
       <button aria-label="Preferences" title="Preferences" popovertarget="preferences"><i class="fa-solid fa-sliders"></i> <span>Preferences</span></button>
       <div id="preferences" popover>
@@ -113,13 +113,52 @@
         <section id="emulator" aria-label="Emulator">
           <div class="preview-heading">
             <h2>Emulator</h2>
-            <div class="controls hidden">
-              <button class="toggle-fps">Toggle FPS</button>
-              <button class="code-stop" onclick="code_stop()"><i class="fa-solid fa-stop"></i> Stop</button>
+            <div class="debug-controls" role="group" aria-label="Execution controls" hidden>
+              <button data-command="pause" title="Pause" aria-label="Pause">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#pause"></use></svg><span>Pause</span>
+              </button>
+              <button data-command="continue" title="Continue" aria-label="Continue">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#play"></use></svg><span>Continue</span>
+              </button>
+              <button data-command="step" title="Step" aria-label="Step">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step"></use></svg><span>Step</span>
+              </button>
+              <button data-command="stepOver" title="Step Over" aria-label="Step Over">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step-over"></use></svg><span>Step Over</span>
+              </button>
+              <button data-command="reset" title="Reset" aria-label="Reset">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#reset"></use></svg><span>Reset</span>
+              </button>
             </div>
           </div>
           <div id="canvas-container"><canvas id="canvas" tabindex="0" width="640" height="480"></canvas></div>
-          <div class="output scrollbars hidden"></div>
+          <details id="debugger" hidden open>
+            <summary>Debugger <span id="cpu-state" role="status"></span></summary>
+            <div class="inspect-tabs" role="tablist" aria-label="Debugger inspection">
+              <button id="cpu-tab" role="tab" aria-controls="cpu-panel" aria-selected="true" tabindex="0">CPU</button>
+              <button id="stack-tab" role="tab" aria-controls="stack-panel" aria-selected="false" tabindex="-1">Stack</button>
+              <button id="memory-tab" role="tab" aria-controls="memory-panel" aria-selected="false" tabindex="-1">Memory</button>
+            </div>
+            <section id="cpu-panel" role="tabpanel" aria-labelledby="cpu-tab" tabindex="0">
+              <dl id="cpu-registers" aria-label="CPU registers in hexadecimal"></dl>
+            </section>
+            <section id="stack-panel" role="tabpanel" aria-labelledby="stack-tab" tabindex="0" hidden>
+              <pre id="stack-values" class="scrollbars"></pre>
+            </section>
+            <section id="memory-panel" role="tabpanel" aria-labelledby="memory-tab" hidden>
+              <form id="memory-location">
+                <label>Hex address <input id="memory-address" value="0000" size="6" required
+                  pattern="(0[xX]|\$)?[0-9a-fA-F]{1,4}" title="16-bit hex address, e.g. C000" spellcheck="false" /></label>
+                <button>Go</button>
+              </form>
+              <pre id="memory-values" class="scrollbars"></pre>
+            </section>
+            <div id="debug-error" role="alert"></div>
+          </details>
+          <details id="runtime-output">
+            <summary>Output</summary>
+            <div class="output scrollbars"></div>
+          </details>
         </section>
       </div>
 
@@ -141,6 +180,7 @@
     <script src="js/playground.js"></script>
     <script src="js/explorer.js"></script>
     <script src="js/editor.js"></script>
+    <script src="js/debugger.js"></script>
     <script src="js/emulator.js"></script>
     <script src="js/assembler.js"></script>
     <script src="js/listing.js"></script>
