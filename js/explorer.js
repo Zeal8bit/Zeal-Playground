@@ -265,14 +265,4 @@
       });
   };
 
-  /**
-   * Resize Handler
-   */
-
-  const onResize = (e) => {
-    const height = explorer.clientHeight - fileList.offsetTop;
-    fileList.style.setProperty('--max-h', `${height}px`);
-  };
-  window.addEventListener('resize', onResize);
-  onResize();
 })();

@@ -1,148 +1,28 @@
-#explorer {
-    background-color: var(--c-100);
-    color: var(--c-800);
-    align-items: center;
-    position: relative;
+#explorer { grid-area: explorer; min-width: 0; overflow: auto; background: var(--theme-surface); }
+#explorer > summary { display: flex; align-items: center; gap: 10px; padding: 14px 12px; }
+#explorer > summary i { color: var(--theme-amber); }
+#explorer summary { list-style: none; cursor: pointer; }
+#explorer summary::-webkit-details-marker { display: none; }
+#explorer .contents { padding: 0 8px 12px; }
+#explorer .new-file { margin: 0 4px 12px; }
+#explorer .file-list, #explorer details details { padding-left: 12px; }
+#explorer .file-item {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 5px 4px;
+    font-size: 13px;
+    cursor: pointer;
+}
+#explorer .file-item:hover { background: var(--theme-hover); }
+#explorer .file-item.active { background: var(--theme-select); }
+#explorer .control { margin-left: auto; visibility: hidden; }
+#explorer .file-item:hover .control, #explorer .file-item:focus-within .control { visibility: visible; }
+#explorer .control:hover { color: var(--theme-break); }
 
-    @media (max-width: 599px) {
-        width: 100vw;
-
-        >summary,
-        >.contents {
-            width: calc(100vw - 20px);
-        }
-    }
-
-    >.contents {
-        min-width: 200px;
-    }
-
-    &[open] {
-        grid-column: span 2;
-        align-items: start;
-
-        >summary {
-            cursor: pointer;
-
-            @media (min-width: 600px) {
-                width: fit-content;
-            }
-
-            align-items: flex-start;
-            justify-content: flex-start;
-
-            :not(icon) {
-                display: inline-block;
-            }
-        }
-
-        &:not(:first-child) {
-            display: block;
-        }
-
-        +* {
-            grid-column: span 1;
-        }
-    }
-
-    &.file-list,
-    .file-list {
-        display: flex;
-        row-gap: var(--row-gap);
-        flex-direction: column;
-        /* padding: 10px 4px; */
-    }
-
-    .file-list,
-    details details {
-        padding-left: 16px;
-    }
-
-    .files {
-        display: flex;
-        flex-direction: column;
-        row-gap: var(--row-gap);
-        width: 100%;
-
-        max-height: 50vh;
-
-        @media (min-width: 1024px) {
-            max-height: var(--max-h);
-        }
-    }
-
-    >summary {
-        @media (min-width: 600px) {
-            :not(icon) {
-                display: none;
-            }
-        }
-
-        &:hover {
-
-            icon,
-            strong {
-                color: var(--c-900);
-            }
-        }
-    }
-
-    &,
-    details {
-        display: flex;
-        flex-direction: column;
-        row-gap: var(--row-gap);
-
-        summary {
-            list-style: none;
-
-            &::-webkit-details-marker {
-                display: none;
-            }
-        }
-    }
-
-    >* {
-        width: 100%;
-    }
-
-    +* {
-        grid-column: span 2;
-    }
-
-    &:not(:first-child) {
-        display: none;
-    }
-
-    .file-item {
-        display: flex;
-        flex-direction: row;
-        gap: 1ch;
-        padding: 4px 8px 4px 4px;
-        border-radius: 4px;
-        font-size: 13px;
-        color: var(--c-900);
-        cursor: pointer;
-
-        .control {
-            margin-left: auto;
-            display: none;
-
-            &:hover {
-                color: var(--error);
-            }
-        }
-
-        &:hover {
-            background-color: color-mix(in srgb, var(--c-border) 80%, black);
-
-            .control {
-                display: block;
-            }
-        }
-
-        &.active {
-            background-color: var(--c-border);
-        }
-    }
+@media (min-width: 700px) {
+    #explorer:not([open]) summary span { position: absolute; clip-path: inset(50%); }
+}
+@media (max-width: 699px) {
+    #explorer .contents > .files { max-height: 34dvh; overflow: auto; }
 }

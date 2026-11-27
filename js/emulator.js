@@ -19,6 +19,19 @@
   const enableZealOS = document.querySelector('input[name=enable_zealos]');
 
   let instance = null;
+  let operation = Promise.resolve();
+  // Each tab runs disposable images independently.
+  const storageNamespace = crypto.randomUUID?.();
+
+  function transition(action) {
+    operation = operation.then(action).then(() => true).catch(error => {
+      controls.classList.remove('hidden');
+      output.classList.remove('hidden');
+      log('error')(error.message);
+      return false;
+    });
+    return operation;
+  }
 
   canvas.addEventListener('keydown', (e) => {
     /* Prevent the window from listening on events that are meant to be sent to the VM */
@@ -34,7 +47,6 @@
 
   const bToggleFPS = emulator.querySelector('.toggle-fps');
   function setToggleFPS(show_fps) {
-    log('warn')('show_fps', show_fps);
     if (show_fps) {
       bToggleFPS.textContent = 'Hide FPS';
     } else {
@@ -43,10 +55,8 @@
   }
 
   bToggleFPS?.addEventListener('click', () => {
-    console.log('toggle-fps');
-    if (instance) {
-      const show_fps = !!!instance.getValue(instance._show_fps, 'i8');
-      instance.setValue(instance._show_fps, show_fps ? 1 : 0, 'i8');
+    if (instance?.runtimeReady && instance.toggleFps()) {
+      const show_fps = Boolean(instance.module.getValue(instance.module._show_fps, 'i8'));
       setToggleFPS(show_fps);
       localStorage.setItem('show_fps', show_fps ? 1 : 0);
     }
@@ -67,59 +77,39 @@
     uses = e.target.checked ? 'zealos' : '';
   });
 
+  async function stopInstance() {
+    if (instance) await instance.exit();
+    instance = null;
+    controls.classList.add('hidden');
+  }
+
   emulator.reload = (data) => {
-    console.log('reloadEmulator', data);
-
-    if (instance) {
-      instance._zeal_exit();
-      instance = null;
-      setTimeout(() => {
-        emulator.reload(data);
-      }, 100);
-      return;
-    }
-
-    output.innerHTML = '';
-    const fileName = editor.fileName.split('/').slice(-1).join('').split('.').slice(0, -1).join('.') + '.bin';
-    let loadArg = '-r';
-    switch (uses) {
-      case 'zealos':
-        loadArg = '-u';
-        break;
-    }
-    const defaultModule = {
-      arguments: [loadArg, `/user/${fileName}`],
-      print: log('info'),
-      printErr: log('error'),
-      get canvas() {
-        const canvas = document.getElementById('canvas');
-        return canvas;
-      },
-      onRuntimeInitialized: function () {
-        this.FS.mkdir('/user');
-        this.FS.writeFile(`/user/${fileName}`, data);
-      },
-    };
-
-    NativeModule(defaultModule).then((mod) => {
-      instance = mod;
-
-      const show_fps = !!parseInt(localStorage.getItem('show_fps') || 0);
-      instance.setValue(instance._show_fps, show_fps, 'i8');
-      setToggleFPS(show_fps);
-      controls.classList.remove('hidden');
+    const withOS = uses === 'zealos';
+    const basename = (editor.fileName || 'main.asm').split('/').pop().replace(/\.[^.]*$/, '');
+    return transition(async () => {
+      await stopInstance();
+      output.replaceChildren();
       output.classList.remove('hidden');
-      output.scrollTop = output.scrollHeight;
+      instance = new ZealNative({
+        canvas,
+        imageStorage: 'memory',
+        storageNamespace,
+        romdisk: withOS ? 'wasm/native/zealos.img' : data,
+        userProgram: withOS ? data : null,
+        userProgramPath: `/roms/${basename}.bin`,
+        print: log('info'),
+        printErr: log('error'),
+      });
+      const mod = await instance.start();
+      const showFPS = localStorage.getItem('show_fps') === '1';
+      mod.setValue(mod._show_fps, Number(showFPS), 'i8');
+      setToggleFPS(showFPS);
+      controls.classList.remove('hidden');
     });
   };
 
-  emulator.stop = () => {
-    console.log('stop emulator');
-    if (instance) {
-      instance._zeal_exit();
-    }
-    instance = null;
-    controls.classList.add('hidden');
+  emulator.stop = () => transition(async () => {
+    await stopInstance();
     output.classList.add('hidden');
-  };
+  });
 })();

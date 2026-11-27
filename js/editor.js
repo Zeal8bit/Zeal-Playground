@@ -62,7 +62,7 @@
   const editor = CodeMirror.fromTextArea(textArea, {
     // base settings
     mode: 'z80-playground',
-    theme: 'solarized dark',
+    theme: 'zeal',
     // indent settings
     tabSize: 2,
     indentUnit: 2,
@@ -105,6 +105,7 @@
     },
   });
   editorEl.editor = editor;
+  document.fonts.load('16px "BigBlue Terminal 437TT"').then(() => editor.refresh());
 
   editor.on('change', () => {
     if (!isDirty) {

@@ -8,6 +8,7 @@ mkdir -p dist
 # List of files and directories to copy
 FILES_TO_COPY=(
   "css"
+  "fonts"
   "files/examples"
   "files/headers"
   "imgs"

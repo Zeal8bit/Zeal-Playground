@@ -15,7 +15,11 @@ const viewport = document.getElementById('viewport');
 const editor = document.getElementById('editor');
 const explorer = document.getElementById('explorer');
 const emulator = document.getElementById('emulator');
-const editorResizers = document.querySelectorAll('.resize-column');
+const splitter = document.querySelector('.resize-column');
+const workspace = document.getElementById('workspace');
+const narrowScreen = matchMedia('(max-width: 699px)');
+explorer.open = !narrowScreen.matches;
+narrowScreen.addEventListener('change', (event) => { explorer.open = !event.matches; });
 
 function prefs_reset_layout() {
   console.log('prefs', 'reset layout');
@@ -86,19 +90,27 @@ editor.addEventListener('file-saved', (e) => {
   explorer.refreshUser();
 });
 
-async function code_run() {
-  const bytes = await assemble();
-  console.log(bytes);
-  /* If we have some bytes, load them to the VFS */
-  const data = new Uint8Array(bytes);
+const themeSelect = document.getElementById('theme');
+themeSelect.value = localStorage.getItem('playground-theme') === 'light' ? 'light' : 'dark';
+document.documentElement.dataset.theme = themeSelect.value;
+themeSelect.addEventListener('change', () => {
+  document.documentElement.dataset.theme = themeSelect.value;
+  localStorage.setItem('playground-theme', themeSelect.value);
+});
 
-  emulator.reload(data);
+let runRequest = 0;
+
+async function code_run() {
+  const request = ++runRequest;
+  const bytes = await assemble();
+  if (!bytes || request !== runRequest) return;
   editor.classList.remove('expand');
+  await emulator.reload(new Uint8Array(bytes));
 }
 
 async function code_stop() {
-  emulator.stop();
-  editor.classList.add('expand');
+  const request = ++runRequest;
+  if (await emulator.stop() && request === runRequest) editor.classList.add('expand');
 }
 
 async function download_binary() {
@@ -117,70 +129,37 @@ async function download_binary() {
   URL.revokeObjectURL(url);
 }
 
-/**
- * Resize Handler
- */
-(() => {
-  let window_width = window.innerWidth;
-  let resizing = false;
-  let col1w_start, col2w_start;
-  let startX;
-  const minWidth = 320;
+// CSS clamps stored widths to the space available on the current screen.
+const savedWidth = Number.parseFloat(localStorage.getItem('container-layout'));
+if (Number.isFinite(savedWidth)) viewport.style.setProperty('--editor-width', savedWidth + 'px');
 
-  function setColumns(col1, col2) {
-    viewport.style.setProperty('--editor-width', `${col1}px`);
-    localStorage.setItem('container-layout', col1);
+function resizeEditor(width) {
+  width = Math.round(Math.max(360, Math.min(workspace.clientWidth - 328, width)));
+  viewport.style.setProperty('--editor-width', width + 'px');
+  localStorage.setItem('container-layout', width);
+}
+
+let grabOffset = 0;
+splitter.addEventListener('pointerdown', (event) => {
+  if (event.button !== 0) return;
+  grabOffset = event.clientX - splitter.getBoundingClientRect().left;
+  splitter.setPointerCapture(event.pointerId);
+  event.preventDefault();
+});
+splitter.addEventListener('pointermove', (event) => {
+  if (splitter.hasPointerCapture(event.pointerId)) {
+    resizeEditor(event.clientX - workspace.getBoundingClientRect().left - grabOffset);
   }
+});
+splitter.addEventListener('keydown', (event) => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  event.preventDefault();
+  if (event.key === 'Home') resizeEditor(360);
+  else if (event.key === 'End') resizeEditor(workspace.clientWidth);
+  else resizeEditor(editor.clientWidth + (event.key === 'ArrowRight' ? 24 : -24));
+});
 
-  window.addEventListener('resize', (e) => {
-    if (window.innerWidth < window_width) {
-      console.log('shrinking...');
-    }
-    window_width = window.innerWidth;
-  });
-
-  window.addEventListener('load', (e) => {
-    const containerLayout = localStorage.getItem('container-layout');
-    if (containerLayout && containerLayout.trim().length) {
-      [col1w_start, col2w_start] = containerLayout.split(' ');
-      setColumns(col1w_start, col2w_start);
-    }
-  });
-
-  editorResizers.forEach((resizer) =>
-    resizer.addEventListener('mousedown', (e) => {
-      resizing = true;
-      startX = e.clientX;
-
-      const styles = window.getComputedStyle(viewport);
-      const cols = styles.gridTemplateColumns.split(' ');
-      col1w_start = parseFloat(cols[2]);
-      col2w_start = parseFloat(cols[4]);
-    }),
-  );
-
-  document.addEventListener('mouseup', (e) => {
-    resizing = false;
-  });
-  document.addEventListener('mousemove', (e) => {
-    if (!resizing) return;
-    e.preventDefault();
-    e.stopPropagation();
-
-    const dx = e.clientX - startX;
-
-    let col1w_new = col1w_start + dx;
-    let col2w_new = col2w_start - dx;
-
-    if (col1w_new < minWidth) {
-      col2w_new -= minWidth - col1w_new;
-      col1w_new = minWidth;
-    }
-    if (col2w_new < minWidth) {
-      col1w_new -= minWidth - col2w_new;
-      col2w_new = minWidth;
-    }
-
-    setColumns(col1w_new, col2w_new);
-  });
-})();
+new ResizeObserver(() => {
+  splitter.setAttribute('aria-valuenow', Math.round(100 * editor.clientWidth / workspace.clientWidth));
+  editor.editor?.refresh();
+}).observe(editor);
