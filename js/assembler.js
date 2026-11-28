@@ -57,59 +57,84 @@ async function parseIncludesFromString(rootUrl, rootName, rootSource, results = 
       continue;
     }
 
-    const includeUrl1 = new URL(`files/headers/${includePath}`, `${rootUrl}`);
-    const includeUrl2 = new URL(`files/${includePath}`, `${rootUrl}`);
-
-    if (!visited.has(includeUrl1) && !visited.has(includeUrl2)) {
-      // Fetch included file
-      let includeUrl = includeUrl1;
-      const response = await fetch(includeUrl.href)
-        .then(async (response) => {
-          if (!response.ok) {
-            includeUrl = includeUrl2;
-            return await fetch(includeUrl.href);
-          }
-          return response;
-        })
-        .catch((e) => {
-          console.error('Exception', e);
-          return { ok: false };
-        });
-      if (!response.ok) {
-        // throw new Error(`Failed to load ${includeUrl}: ${response.statusText}`);
-        console.error(`Failed to load ${includeUrl}: ${response.statusText}`);
-        continue;
+    // Project-relative includes and binary assets already name their folder.
+    const candidates = includePath.startsWith('examples/')
+      ? [`files/${includePath}`, `files/headers/${includePath}`]
+      : [`files/headers/${includePath}`, `files/${includePath}`];
+    let found = false;
+    for (const path of candidates) {
+      if (Object.hasOwn(results, path)) {
+        found = true;
+        break;
       }
-
-      if (directive == 'include') {
-        const includeSource = await response.text();
-
-        // Recurse using the fetched contents
-        await parseIncludesFromString(
-          rootUrl, // new URL('./', includeUrl).href, // new base for further includes
-          includeUrl.pathname.slice(1), // use URL as the key
-          includeSource,
-          results,
-          visited,
-        );
+      const response = await fetch(new URL(path, rootUrl)).catch(() => null);
+      if (!response?.ok) continue;
+      if (directive === 'include') {
+        await parseIncludesFromString(rootUrl, path, await response.text(), results, visited);
       } else {
-        const buffer = await response.arrayBuffer();
-        results[includeUrl.pathname.slice(1)] = new Uint8Array(buffer);
+        results[path] = new Uint8Array(await response.arrayBuffer());
       }
+      found = true;
+      break;
     }
+    if (!found) console.error(`Could not load include: ${includePath}`);
+
   }
 
   return results;
 }
 
+// Read the line records from the final ELF32-Z80 image, after section relocation.
+function linkedSourceLines(elf, sources) {
+  const data = new DataView(elf.buffer, elf.byteOffset, elf.byteLength);
+  const sectionTable = data.getUint32(32, true);
+  const entrySize = data.getUint16(46, true);
+  const sectionCount = data.getUint16(48, true);
+  function section(index) {
+    const header = sectionTable + index * entrySize;
+    const start = data.getUint32(header + 16, true);
+    return elf.subarray(start, start + data.getUint32(header + 20, true));
+  }
+  const decoder = new TextDecoder();
+  function stringAt(table, offset) {
+    return decoder.decode(table.subarray(offset, table.indexOf(0, offset)));
+  }
+
+  const sectionNames = section(data.getUint16(50, true));
+  let records, names;
+  for (let i = 0; i < sectionCount; i++) {
+    const name = stringAt(sectionNames, data.getUint32(sectionTable + i * entrySize, true));
+    if (name === '.stab') records = section(i);
+    if (name === '.stabstr') names = section(i);
+  }
+  const lines = new Map();
+  if (!records || !names) return lines;
+  const stabs = new DataView(records.buffer, records.byteOffset, records.byteLength);
+  let file;
+  for (let i = 0; i + 12 <= records.length; i += 12) {
+    const type = stabs.getUint8(i + 4);
+    if (type === 0x64 || type === 0x84) { // N_SO / N_SOL: source file or include
+      const name = stringAt(names, stabs.getUint32(i, true)).replace(/^\/src\//, '');
+      file = sources.has(name) ? name : null;
+    } else if (type === 0x44 && file) { // N_SLINE: line number and linked instruction address
+      const line = stabs.getUint16(i + 6, true);
+      if (line) lines.set(stabs.getUint32(i + 8, true), { file, line: line - 1 });
+    }
+  }
+  return lines;
+}
+
 async function assemble() {
   const code = editor.getValue();
+  const generation = editor.entryDoc.changeGeneration();
+  const fileName = editor.fileName ?? 'main.asm';
+  const withOS = emulator.uses === 'zealos';
   editor.clearErrors();
 
   const verbose = document.querySelector('input[name=verbose]');
 
   const includes = await parseIncludesFromString(
-    location.href + '/files/headers', // base path for includes
+    new URL('.', document.baseURI), // directory containing the Playground
     'source', // key for the root file
     code, // the initial contents
   ).then((files) => {
@@ -122,14 +147,11 @@ async function assemble() {
   hexView.textContent = '';
   const listView = document.getElementById('list-view');
 
-  const fileName = editor.fileName ?? 'main.asm';
-
-  let org = '0x0000';
-  if (emulator.uses == 'zealos') org = '0x4000';
+  const org = withOS ? '0x4000' : '0x0000';
   const toolchain = new GnuToolchain({
     verbose: verbose.checked,
   });
-  const { bin, listing, map, errors } = await toolchain.execute(fileName, code, { includes, org }).catch((errors) => {
+  const { bin, listing, map, elf, errors } = await toolchain.execute(fileName, code, { includes, org }).catch((errors) => {
     if (Array.isArray(errors)) {
       errors.forEach((err) => console.error(err.source, err.message));
     } else {
@@ -141,6 +163,7 @@ async function assemble() {
 
   if (!bin) {
     console.error('no binary file was produced, check for errors');
+    document.getElementById('build-output').open = true;
     document.getElementById('log').className = 'log error';
     document.getElementById('log').textContent = 'No binary file was produced, check for errors';
     if (Array.isArray(errors)) {
@@ -158,7 +181,7 @@ async function assemble() {
   }
 
   document.getElementById('log').className = 'log';
-  document.getElementById('log').textContent = 'Assembly successful. Generated bytes:';
+  document.getElementById('log').textContent = 'Assembly successful';
 
   const hex = bin.reduce((acc, byte, i) => {
     if (i % 16 === 0) {
@@ -175,5 +198,7 @@ async function assemble() {
   hexView.textContent = hex;
   listView.textContent = listing + `\n\n\nGLD MAP /user/${fileName}\n` + map;
 
-  return bin;
+  const sources = new Map(Object.entries(includes).filter(([, text]) => typeof text === 'string'));
+  sources.set(fileName, code);
+  return { bin, sourceLines: linkedSourceLines(elf, sources), sources, generation, fileName, withOS };
 }

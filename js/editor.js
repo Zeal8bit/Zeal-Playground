@@ -62,7 +62,7 @@
   const editor = CodeMirror.fromTextArea(textArea, {
     // base settings
     mode: 'z80-playground',
-    theme: 'solarized dark',
+    theme: 'zeal',
     // indent settings
     tabSize: 2,
     indentUnit: 2,
@@ -105,8 +105,160 @@
     },
   });
   editorEl.editor = editor;
+  document.fonts.load('16px "BigBlue Terminal 437TT"').then(() => editor.refresh());
+
+  // The entry document owns editing, undo, saving, and the next build.
+  // Included documents are read-only snapshots of the sources in this build.
+  const entry = editor.getDoc();
+  editorEl.entryDoc = entry;
+  const sourceNav = editorEl.querySelector('.debug-sources');
+  const includes = new Map();
+  const breakpoints = new Map(); // CodeMirror line handle -> owning document
+  const locations = new Map(); // linked address -> document and line
+  const addresses = new Map(); // document -> first address for each source line
+  let installed = new Set();
+  let marker;
+  let currentPC;
+  let activeSources = new Map();
+
+  function showDocument(doc) {
+    if (editor.getDoc() === doc) return;
+    editor.swapDoc(doc);
+    const included = doc !== entry;
+    editor.setOption('readOnly', included);
+    bSaveFile.disabled = included;
+    const path = [...activeSources].find(([, source]) => source === doc)?.[0];
+    fileName.textContent = included ? path.replace(/^files\//, '') + ' (read-only)' :
+      (isDirty ? '* ' : '') + (editor.fileName || 'new file');
+    fileName.title = included ? 'Included source from this build: ' + path : '';
+    fileName.classList.toggle('info', !included && isDirty);
+    for (const button of sourceNav.children) {
+      button.setAttribute('aria-pressed', String(activeSources.get(button.value) === doc));
+    }
+  }
+
+  function showLocation(pc, follow = false) {
+    currentPC = pc;
+    const location = locations.get(pc);
+    if (follow && location) showDocument(location.doc);
+    if (marker && (marker.location !== location || marker.location.doc !== editor.getDoc())) {
+      marker.location.doc.removeLineClass(marker.handle, 'background', 'execution-line');
+      marker = null;
+    }
+    if (location && location.doc === editor.getDoc()) {
+      if (!marker) {
+        const handle = location.doc.addLineClass(location.line, 'background', 'execution-line');
+        marker = { location, handle };
+      }
+      if (follow) editor.scrollIntoView({ line: location.line, ch: 0 }, 32);
+    }
+    return Boolean(location);
+  }
+  editorEl.showExecutionAt = showLocation;
+  editorEl.hasExecutionLines = () => locations.size > 0;
+  editorEl.setExecutionLines = (build) => {
+    showLocation(null);
+    showDocument(entry);
+    locations.clear();
+    addresses.clear();
+    activeSources = new Map();
+    sourceNav.replaceChildren();
+    sourceNav.hidden = true;
+    if (!build) return;
+    activeSources.set(build.fileName, entry);
+    for (const [pc, { file, line }] of build.sourceLines) {
+      let doc = activeSources.get(file);
+      if (!doc) {
+        const text = build.sources.get(file);
+        doc = includes.get(file);
+        if (!doc || doc.getValue() !== text) {
+          for (const [handle, owner] of breakpoints) if (owner === doc) breakpoints.delete(handle);
+          doc = new CodeMirror.Doc(text, 'z80-playground');
+          includes.set(file, doc);
+        }
+        activeSources.set(file, doc);
+      }
+      if (line >= doc.lineCount()) continue;
+      locations.set(pc, { doc, line });
+      if (!addresses.has(doc)) addresses.set(doc, new Map());
+      const byLine = addresses.get(doc);
+      if (!byLine.has(line)) byLine.set(line, pc);
+    }
+    if (activeSources.size < 2) return;
+    for (const [file, doc] of activeSources) {
+      const button = document.createElement('button');
+      button.value = file;
+      button.textContent = file.split('/').pop();
+      button.title = doc === entry ? 'Example source' : file.replace(/^files\//, '');
+      button.setAttribute('aria-pressed', String(doc === entry));
+      button.addEventListener('click', () => {
+        showDocument(doc);
+        showLocation(currentPC);
+      });
+      sourceNav.append(button);
+    }
+    sourceNav.hidden = false;
+  };
+
+  editorEl.previewSource = path => {
+    const doc = activeSources.get('files/' + path) || activeSources.get(path) ||
+      (path === editorEl.filePath && activeSources.size ? entry : null);
+    if (!doc) return false;
+    showDocument(doc);
+    showLocation(currentPC);
+    return true;
+  };
+
+  function breakpointAddress(doc, line) {
+    const byLine = addresses.get(doc);
+    if (!byLine) return;
+    for (; line < doc.lineCount(); line++) {
+      if (byLine.has(line)) return byLine.get(line);
+      const text = doc.getLine(line).split(';', 1)[0].trim();
+      if (text && !/^[\w.$]+:$/.test(text)) return;
+    }
+  }
+  editorEl.breakpointAddresses = () => {
+    const wanted = new Set();
+    for (const [handle, doc] of breakpoints) {
+      const line = doc.getLineNumber(handle);
+      if (line === null) {
+        breakpoints.delete(handle);
+        continue;
+      }
+      const address = breakpointAddress(doc, line);
+      if (address !== undefined) wanted.add(address);
+      if (installed.has(address)) doc.addLineClass(handle, 'gutter', 'breakpoint-bound');
+      else doc.removeLineClass(handle, 'gutter', 'breakpoint-bound');
+    }
+    return wanted;
+  };
+  editorEl.reflectBreakpoints = (nativeAddresses) => {
+    installed = nativeAddresses;
+    editorEl.breakpointAddresses();
+  };
+  function toggleBreakpoint(line) {
+    const doc = editor.getDoc();
+    const handle = doc.getLineHandle(line);
+    if (breakpoints.delete(handle)) {
+      doc.removeLineClass(handle, 'gutter', 'source-breakpoint');
+      doc.removeLineClass(handle, 'gutter', 'breakpoint-bound');
+    } else {
+      if (!doc.getLine(line).split(';', 1)[0].trim()) return;
+      breakpoints.set(handle, doc);
+      doc.addLineClass(handle, 'gutter', 'source-breakpoint');
+    }
+    editorEl.dispatchEvent(new Event('breakpoints-changed'));
+  }
+  editor.on('gutterClick', (cm, line, gutter) => {
+    if (gutter === 'CodeMirror-linenumbers') toggleBreakpoint(line);
+  });
+  editor.addKeyMap({ F9: () => toggleBreakpoint(editor.getCursor().line) });
 
   editor.on('change', () => {
+    const hadMap = locations.size > 0;
+    editorEl.setExecutionLines(null);
+    if (hadMap) editorEl.dispatchEvent(new Event('breakpoints-changed'));
     if (!isDirty) {
       isDirty = true;
       fileName.textContent = `* ${editor.fileName}`;
@@ -115,6 +267,7 @@
   });
 
   editorEl.gotoLine = (line, opts = {}) => {
+    showDocument(entry);
     editor.setCursor({ line });
     editor.scrollIntoView({ line }, 100);
     editor.focus();
@@ -134,23 +287,24 @@
       const el = document.createElement('div');
       el.classList.add('cm-error-marker');
       el.innerHTML = '●';
-      editor.setGutterMarker(line, 'CodeMirror-linenumbers', el);
-      editor.addLineClass(line, 'background', `cm-error`);
+      entry.setGutterMarker(line, 'CodeMirror-linenumbers', el);
+      entry.addLineClass(line, 'background', `cm-error`);
     } else {
-      editor.removeLineClass(line, 'background', 'cm-error');
-      editor.setGutterMarker(line, 'CodeMirror-linenumbers', null);
+      entry.removeLineClass(line, 'background', 'cm-error');
+      entry.setGutterMarker(line, 'CodeMirror-linenumbers', null);
     }
   };
 
   editorEl.clearErrors = () => {
-    const lineCount = editor.lineCount();
+    const lineCount = entry.lineCount();
     for (let line = 0; line < lineCount; line++) {
-      editor.removeLineClass(line, 'background', 'cm-error');
-      editor.setGutterMarker(line, 'CodeMirror-linenumbers', null);
+      entry.removeLineClass(line, 'background', 'cm-error');
+      entry.setGutterMarker(line, 'CodeMirror-linenumbers', null);
     }
   };
 
   editorEl.gotoLabel = (label, highlight = false) => {
+    showDocument(entry);
     const lineCount = editor.lineCount();
     const pattern = new RegExp('^\\s*' + label.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ':');
     for (let i = 0; i < lineCount; i++) {
@@ -164,6 +318,13 @@
   };
 
   editorEl.openFile = (o) => {
+    showDocument(entry);
+    for (const [handle, doc] of breakpoints) {
+      doc.removeLineClass(handle, 'gutter', 'source-breakpoint');
+      doc.removeLineClass(handle, 'gutter', 'breakpoint-bound');
+    }
+    breakpoints.clear();
+    includes.clear();
     editor.setValue(o.text);
     isDirty = false;
 
@@ -203,9 +364,10 @@
     return Promise.resolve(o);
   };
 
-  editorEl.getValue = () => editor.getValue();
+  editorEl.getValue = () => entry.getValue();
 
   function saveFile() {
+    if (editor.getDoc() !== entry) return;
     let name = editor.fileName?.trim();
     if (!name || name.length < 0) {
       name = prompt('Filename: ', 'user.asm');

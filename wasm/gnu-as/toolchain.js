@@ -160,7 +160,7 @@ class GnuToolchain {
     }
 
     const args = [
-      '-g',
+      '--gstabs',
       '-I/src/user',
       '-I/src/files',
       ...includePaths.map((path) => `-I/src/${path}`),
@@ -314,7 +314,7 @@ class GnuToolchain {
     this.includes = includes || {};
     this.org = org;
 
-    const linkerScript = fetch('wasm/gnu-as/zeal8bit.ld')
+    await fetch('wasm/gnu-as/zeal8bit.ld')
       .then((response) => (response.ok ? response.text() : null))
       .then((script) => {
         this.linker.script = script;
